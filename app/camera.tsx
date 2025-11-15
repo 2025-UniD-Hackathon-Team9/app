@@ -19,12 +19,30 @@ export default function CameraScreen() {
   if (!permission.granted) {
     return (
       <View style={styles.container}>
+        <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
         <View style={styles.permissionContainer}>
-          <MaterialIcons name="photo-camera" size={64} color={colors.neutral[400]} />
-          <Text style={styles.permissionText}>카메라 권한이 필요합니다</Text>
-          <Pressable style={styles.permissionButton} onPress={requestPermission}>
-            <Text style={styles.permissionButtonText}>권한 허용</Text>
+          <Pressable style={styles.closeButtonPermission} onPress={() => router.back()}>
+            <MaterialIcons name="close" size={28} color={colors.neutral[400]} />
           </Pressable>
+
+          <View style={styles.permissionContent}>
+            <View style={styles.iconCircle}>
+              <MaterialIcons name="photo-camera" size={48} color={colors.primary[500]} />
+            </View>
+
+            <Text style={styles.permissionTitle}>카메라 접근 권한</Text>
+            <Text style={styles.permissionDescription}>
+              필기 내용을 촬영하여{'\n'}학습 자료로 활용합니다
+            </Text>
+
+            <Pressable style={styles.permissionButton} onPress={requestPermission}>
+              <Text style={styles.permissionButtonText}>카메라 권한 허용</Text>
+            </Pressable>
+
+            <Pressable style={styles.cancelButton} onPress={() => router.back()}>
+              <Text style={styles.cancelButtonText}>취소</Text>
+            </Pressable>
+          </View>
         </View>
       </View>
     );
@@ -90,22 +108,74 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
+    backgroundColor: colors.neutral.white,
   },
-  permissionText: {
-    fontSize: 18,
-    color: colors.neutral[600],
-    marginTop: 16,
-    marginBottom: 24,
+  closeButtonPermission: {
+    position: 'absolute',
+    top: 60,
+    right: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: colors.neutral.gray50,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  permissionContent: {
+    width: '100%',
+    maxWidth: 320,
+    alignItems: 'center',
+  },
+  iconCircle: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: colors.primary[50],
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 32,
+  },
+  permissionTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: colors.text.primary,
+    marginBottom: 12,
     textAlign: 'center',
   },
+  permissionDescription: {
+    fontSize: 16,
+    color: colors.text.secondary,
+    lineHeight: 24,
+    textAlign: 'center',
+    marginBottom: 40,
+  },
   permissionButton: {
+    width: '100%',
     backgroundColor: colors.primary[500],
-    paddingHorizontal: 32,
-    paddingVertical: 12,
-    borderRadius: 8,
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginBottom: 12,
+    shadowColor: colors.primary[500],
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
   },
   permissionButtonText: {
     color: colors.neutral.white,
+    fontSize: 17,
+    fontWeight: '700',
+  },
+  cancelButton: {
+    width: '100%',
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  cancelButtonText: {
+    color: colors.text.secondary,
     fontSize: 16,
     fontWeight: '600',
   },

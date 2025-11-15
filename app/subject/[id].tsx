@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { colors } from '@/constants/colors';
+import { MaterialIcons } from '@expo/vector-icons';
 
 const SUBJECT_INFO: { [key: string]: { name: string; icon: string; color: string } } = {
   math: { name: '수학', icon: '📐', color: colors.primary[500] },
@@ -13,11 +13,15 @@ const SUBJECT_INFO: { [key: string]: { name: string; icon: string; color: string
 export default function SubjectScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
+  const router = useRouter();
   const subject = SUBJECT_INFO[id] || { name: '과목', icon: '📖', color: colors.primary[500] };
 
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
+        <Pressable style={styles.backButton} onPress={() => router.back()}>
+          <MaterialIcons name="arrow-back" size={24} color={colors.text.primary} />
+        </Pressable>
         <View style={[styles.iconContainer, { backgroundColor: subject.color }]}>
           <Text style={styles.icon}>{subject.icon}</Text>
         </View>
@@ -73,66 +77,75 @@ export default function SubjectScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: colors.neutral.gray50,
   },
   header: {
     alignItems: 'center',
-    paddingVertical: 40,
+    paddingTop: 60,
+    paddingBottom: 40,
     paddingHorizontal: 20,
     backgroundColor: colors.neutral.white,
+    position: 'relative',
+  },
+  backButton: {
+    position: 'absolute',
+    top: 60,
+    left: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    zIndex: 10,
   },
   iconContainer: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+    width: 96,
+    height: 96,
+    borderRadius: 48,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 16,
-    shadowColor: colors.shadow,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 4,
+    marginBottom: 20,
   },
   icon: {
-    fontSize: 50,
+    fontSize: 52,
   },
   title: {
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: 'bold',
     color: colors.text.primary,
+    letterSpacing: -0.8,
   },
   content: {
     padding: 20,
   },
   section: {
-    marginBottom: 24,
+    marginBottom: 28,
   },
   sectionTitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: 'bold',
     color: colors.text.primary,
-    marginBottom: 12,
+    marginBottom: 16,
+    letterSpacing: -0.5,
   },
   emptyState: {
     backgroundColor: colors.neutral.white,
-    borderRadius: 16,
-    padding: 32,
+    borderRadius: 20,
+    padding: 40,
     alignItems: 'center',
     shadowColor: colors.shadow,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.04,
     shadowRadius: 8,
     elevation: 2,
   },
   emptyText: {
-    fontSize: 16,
+    fontSize: 17,
     color: colors.text.secondary,
     marginBottom: 8,
+    fontWeight: '500',
   },
   emptySubText: {
-    fontSize: 14,
-    color: colors.text.secondary,
+    fontSize: 15,
+    color: colors.text.disabled,
   },
   statsGrid: {
     flexDirection: 'row',
@@ -141,24 +154,26 @@ const styles = StyleSheet.create({
   statCard: {
     flex: 1,
     backgroundColor: colors.neutral.white,
-    borderRadius: 16,
-    padding: 20,
+    borderRadius: 20,
+    padding: 24,
     alignItems: 'center',
     shadowColor: colors.shadow,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.04,
     shadowRadius: 8,
     elevation: 2,
   },
   statValue: {
-    fontSize: 32,
+    fontSize: 36,
     fontWeight: 'bold',
     color: colors.primary[500],
     marginBottom: 8,
+    letterSpacing: -1,
   },
   statLabel: {
-    fontSize: 14,
+    fontSize: 15,
     color: colors.text.secondary,
+    fontWeight: '500',
   },
   testButton: {
     backgroundColor: colors.accent[500],

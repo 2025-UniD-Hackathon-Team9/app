@@ -118,11 +118,6 @@ export default function StudyCalendar({ studyRecords, currentMonth }: StudyCalen
                 >
                   {day}
                 </Text>
-                {sessions > 0 && (
-                  <View style={styles.sessionDot}>
-                    <Text style={styles.sessionCount}>{sessions}</Text>
-                  </View>
-                )}
               </View>
             </View>
           );
@@ -133,10 +128,6 @@ export default function StudyCalendar({ studyRecords, currentMonth }: StudyCalen
       <View style={styles.legend}>
         <Text style={styles.legendLabel}>활동량:</Text>
         <View style={styles.legendItems}>
-          <View style={styles.legendItem}>
-            <View style={[styles.legendBox, styles.level0]} />
-            <Text style={styles.legendText}>없음</Text>
-          </View>
           <View style={styles.legendItem}>
             <View style={[styles.legendBox, styles.level1]} />
             <Text style={styles.legendText}>낮음</Text>
@@ -158,27 +149,28 @@ export default function StudyCalendar({ studyRecords, currentMonth }: StudyCalen
 const styles = StyleSheet.create({
   container: {
     backgroundColor: colors.neutral.white,
-    borderRadius: 24,
+    borderRadius: 20,
     padding: 24,
     marginHorizontal: 20,
     marginVertical: 12,
     shadowColor: colors.shadow,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 2,
   },
   header: {
-    marginBottom: 20,
+    marginBottom: 24,
   },
   title: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: 'bold',
     color: colors.text.primary,
-    marginBottom: 4,
+    marginBottom: 6,
+    letterSpacing: -0.5,
   },
   monthName: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '500',
     color: colors.text.secondary,
   },
@@ -196,19 +188,20 @@ const styles = StyleSheet.create({
     color: colors.text.secondary,
   },
   weekendText: {
-    color: colors.accent[500],
+    color: colors.neutral.black,
   },
   calendarGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 6,
   },
   dayCell: {
-    width: `${100 / 7 - 1.5}%`,
+    width: `${100 / 7}%`,
     aspectRatio: 1,
+    padding: 3,
   },
   dayContent: {
-    flex: 1,
+    width: '100%',
+    height: '100%',
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 12,
@@ -226,10 +219,9 @@ const styles = StyleSheet.create({
   },
   dayNumberToday: {
     fontWeight: 'bold',
-    color: colors.accent[500],
   },
   today: {
-    borderWidth: 2,
+    borderWidth: 2.5,
     borderColor: colors.accent[500],
     shadowColor: colors.accent[500],
     shadowOffset: { width: 0, height: 2 },
@@ -248,25 +240,6 @@ const styles = StyleSheet.create({
   },
   level3: {
     backgroundColor: colors.primary[600],
-  },
-  sessionDot: {
-    position: 'absolute',
-    bottom: 3,
-    right: 3,
-    minWidth: 18,
-    height: 18,
-    borderRadius: 9,
-    backgroundColor: colors.accent[500],
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 4,
-    borderWidth: 2,
-    borderColor: colors.neutral.white,
-  },
-  sessionCount: {
-    fontSize: 9,
-    fontWeight: 'bold',
-    color: colors.neutral.white,
   },
   legend: {
     marginTop: 20,
