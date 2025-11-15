@@ -37,7 +37,12 @@ const SUBJECT_INFO: { [key: string]: { name: string; icon: string; color: string
 export default function ProblemScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id } = useLocalSearchParams<{ id:string }>();
+
+  if (!id) {
+    return null;
+  }
+
   const subject = SUBJECT_INFO[id] || { name: '과목', icon: '📖', color: colors.primary[500] };
 
   const [currentProblemIndex, setCurrentProblemIndex] = useState(0);
@@ -180,7 +185,6 @@ export default function ProblemScreen() {
             disabled={selectedOption === null}
             style={({ pressed }) => [
               styles.submitButton,
-              { backgroundColor: subject.color },
               selectedOption === null && styles.submitButtonDisabled,
               pressed && selectedOption !== null && { opacity: 0.85 },
             ]}
@@ -192,7 +196,7 @@ export default function ProblemScreen() {
             onPress={handleNext}
             style={({ pressed }) => [
               styles.submitButton,
-              { backgroundColor: subject.color },
+              styles.continueButton,
               pressed && { opacity: 0.85 },
             ]}
           >
@@ -345,6 +349,10 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: colors.primary[500],
+  },
+  continueButton: {
+    backgroundColor: colors.accent[500],
   },
   submitButtonDisabled: {
     backgroundColor: colors.neutral.gray200,

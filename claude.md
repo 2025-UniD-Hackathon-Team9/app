@@ -20,5 +20,333 @@
 4. 과목에 대한 ‘가벼운’ 퀴즈 제시, 틀린 것들은 따로 저장
 
 ## TODO
-1. 과목 추가
-2. 오답노트/문제
+# **API 표**
+
+| 도메인 | 메서드 | 엔드포인트 | 설명 | API 구현 여부 | 테스트 여부 |
+| --- | --- | --- | --- | --- | --- |
+| **Auth** | POST | /auth/signup | 회원가입 | O | ❌ |
+| **Auth** | POST | /auth/login | 로그인 | O | ❌ |
+| **Users** | GET | /users/:id | User 정보 조회 | O | ❌ |
+| **Courses** | POST | /courses | 과목 생성 | O | ❌ |
+| **Courses** | GET | /courses?user_id=1 | user_id 기준 과목 목록 조회 | O | ❌ |
+| **Documents** | POST | /documents | PDF 업로드 | ❌ | ❌ |
+| **Documents** | POST | /documents/:id/parse | 문서 파싱 실행 | ❌ | ❌ |
+| **Documents** | GET | /documents?course_id=10 | 과목 내 문서 목록 조회 | ❌ | ❌ |
+| **Sessions** | POST | /sessions | 세션 생성 (문제 자동 생성 포함) | ❌ | ❌ |
+| **Sessions** | GET | /sessions/:id | 세션 문제 조회 | ❌ | ❌ |
+| **Sessions** | POST | /sessions/:id/submit | 세션 전체 제출 및 채점 | ❌ | ❌ |
+| **Sessions** | GET | /sessions?user_id=1&course_id=10 | 세션 기록 조회 | ❌ | ❌ |
+
+# 📌 **0. Auth Domain (회원가입 & 로그인)**
+
+## **POST /auth/signup — 회원가입**
+
+### ✔ Request
+
+```json
+{
+  "email": "test@example.com",
+  "password": "1234",
+  "name": "홍길동"
+}
+
+```
+
+### ✔ Response
+
+```json
+{
+  "user_id": 1,
+  "email": "test@example.com",
+  "name": "홍길동"
+}
+
+```
+
+## **POST /auth/login — 로그인**
+
+JWT 없이 간단 로그인 → user_id만 반환
+
+### ✔ Request
+
+```json
+{
+  "email": "test@example.com",
+  "password": "1234"
+}
+
+```
+
+### ✔ Response
+
+```json
+{
+  "user_id": 1,
+  "email": "test@example.com",
+  "name": "홍길동"
+}
+
+```
+
+---
+
+# 📌 **1. Users Domain**
+
+## **GET /users/:id**
+
+### ✔ Response
+
+```json
+{
+    "id": 1,
+    "email": "test1@example.com",
+    "passwordHash": "1234",
+    "name": "홍길동",
+    "createdAt": "2025-11-15T22:22:22"
+}
+```
+
+---
+
+# 📌 **2. Courses Domain (과목 관리)**
+
+## **POST /courses**
+
+### ✔ Request
+
+```json
+{
+  "user_id": 1,
+  "title": "운영체제"
+}
+
+```
+
+### ✔ Response
+
+```json
+{
+    "id": 1,
+    "title": "운영체제",
+    "user_id": 1,
+    "created_at": "2025-11-15T22:39:09.613236"
+}
+```
+
+---
+
+## **GET /courses?user_id=1**
+
+### ✔ Response
+
+```json
+[
+    {
+        "id": 1,
+        "title": "운영체제",
+        "user_id": 1,
+        "created_at": "2025-11-15T22:39:10"
+    }
+    ,
+    {
+        "id": 2,
+        "title": "ㅁㅁㅁㅁ",
+        "user_id": 1,
+        "created_at": "2025-11-15T22:39:10"
+    }
+]
+```
+
+---
+
+# 📌 **3. Documents Domain (PDF 업로드 & 파싱)**
+
+## **POST /documents — PDF 업로드**
+
+(Form-Data)
+
+| key | value |
+| --- | --- |
+| file | PDF 파일 |
+| user_id | 1 |
+| course_id | 10 |
+
+### ✔ Response
+
+```json
+{
+  "document_id": 33,
+  "status": "uploaded",
+  "file_path": "/uploads/xyz.pdf"
+}
+
+```
+
+---
+
+## **POST /documents/:documentId/parse**
+
+문서를 AI로 파싱 → `parsed_json` 저장
+
+`status = parsed`로 변경
+
+### ✔ Response
+
+```json
+{
+  "document_id": 33,
+  "status": "parsed",
+  "parsed_json": {
+    "sections": [
+      {
+        "header": "헤더",
+        "content": ["ㅁㅁㅁㅁㅁ"]
+      }
+    ]
+  }
+}
+
+```
+
+---
+
+## **GET /documents?course_id=10**
+
+### ✔ Response
+
+```json
+[
+  {
+    "id": 33,
+    "status": "parsed",
+    "created_at": "2025-01-01"
+  },
+  {
+    "id": 34,
+    "status": "uploaded",
+    "created_at": "2025-01-02"
+  }
+]
+
+```
+
+---
+
+# 📌 **4. Sessions Domain (학습 세션)**
+
+## **POST /sessions — 세션 생성**
+
+문서 기반 문제 생성 → 세션 및 session_questions 자동 생성
+
+### ✔ Request
+
+```json
+{
+  "user_id": 1,
+  "course_id": 10,
+  "document_id": 33
+}
+
+```
+
+### ✔ Response
+
+```json
+{
+  "session_id": 100,
+  "status": "NotStarted",
+  "keywords": ["프로세스", "CPU 스케줄링"]
+}
+
+```
+
+---
+
+## **GET /sessions/:sessionId — 세션 문제 조회**
+
+### ✔ Response
+
+```json
+{
+  "session_id": 100,
+  "course_id": 10,
+  "status": "InProgress",
+  "questions": [
+    {
+      "id": 1,
+      "item_order": 1,
+      "type": "mcq",
+      "question_text": "프로세스란 무엇인가?",
+      "options": ["프로그램", "실행 중인 프로그램", "데이터 구조"]
+    },
+    {
+      "id": 2,
+      "item_order": 2,
+      "type": "short",
+      "question_text": "PCB에 포함되는 정보를 적으시오."
+    }
+  ]
+}
+
+```
+
+---
+
+## **POST /sessions/:sessionId/submit — 세션 답 전체 제출**
+
+### ✔ Request
+
+```json
+{
+  "answers": [
+    { "session_question_id": 1, "user_answer": "실행 중인 프로그램" },
+    { "session_question_id": 2, "user_answer": "프로세스 상태 등" }
+  ]
+}
+
+```
+
+### ✔ Response
+
+```json
+{
+  "session_id": 100,
+  "score": 50,
+  "isCompleted": false,
+  "results": [
+    {
+      "question_id": 1,
+      "correct": true
+    },
+    {
+      "question_id": 2,
+      "correct": false,
+      "real_answer": "프로세스 상태"
+    }
+  ]
+}
+```
+
+---
+
+## **GET /sessions?user_id=1&course_id=10 — 세션 히스토리**
+
+### ✔ Response
+
+```json
+[
+  {
+    "id": 100,
+    "status": "Completed",
+    "score": 100,
+    "created_at": "2025-01-01"
+  },
+  {
+    "id": 101,
+    "status": "Completed",
+    "score": 60,
+    "created_at": "2025-01-02"
+  }
+]
+
+```
