@@ -1,6 +1,7 @@
-import { View, Text, StyleSheet, ScrollView, Pressable, Animated, Modal, TouchableWithoutFeedback } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, Animated, StatusBar } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '@/constants/colors';
 import { useState } from 'react';
 
@@ -35,6 +36,7 @@ const SUBJECT_INFO: { [key: string]: { name: string; icon: string; color: string
 
 export default function ProblemScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
   const subject = SUBJECT_INFO[id] || { name: '과목', icon: '📖', color: colors.primary[500] };
 
@@ -76,24 +78,30 @@ export default function ProblemScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Pressable onPress={handleQuit} style={styles.quitButton}>
-          <MaterialIcons name="close" size={28} color={colors.text.primary} />
-        </Pressable>
+      <StatusBar barStyle="dark-content" />
 
-        <View style={styles.progressBarContainer}>
-          <View style={styles.progressBarBackground}>
-            <Animated.View
-              style={[
-                styles.progressBarFill,
-                {
-                  width: `${progress * 100}%`,
-                  backgroundColor: subject.color,
-                },
-              ]}
-            />
-          </View>
+      {/* Header */}
+      <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
+        <View style={styles.headerTop}>
+          <Pressable onPress={handleQuit} style={styles.quitButton}>
+            <MaterialIcons name="close" size={24} color={colors.text.primary} />
+          </Pressable>
+          <Text style={styles.problemCounter}>
+            {currentProblemIndex + 1} / {SAMPLE_PROBLEMS.length}
+          </Text>
+          <View style={styles.placeholder} />
+        </View>
+
+        <View style={styles.progressBarBackground}>
+          <Animated.View
+            style={[
+              styles.progressBarFill,
+              {
+                width: `${progress * 100}%`,
+                backgroundColor: subject.color,
+              },
+            ]}
+          />
         </View>
       </View>
 
@@ -101,21 +109,13 @@ export default function ProblemScreen() {
       <ScrollView
         style={styles.content}
         contentContainerStyle={styles.contentContainer}
-        scrollEnabled={false}
       >
-        {/* Subject Info */}
-        <View style={styles.subjectInfo}>
-          <View style={[styles.iconContainer, { backgroundColor: subject.color }]}>
-            <Text style={styles.icon}>{subject.icon}</Text>
-          </View>
-          <Text style={styles.subjectName}>{subject.name}</Text>
-          <Text style={styles.problemCounter}>
-            {currentProblemIndex + 1} / {SAMPLE_PROBLEMS.length}
-          </Text>
-        </View>
-
         {/* Question Section */}
         <View style={styles.questionSection}>
+          <View style={styles.subjectBadge}>
+            <Text style={styles.subjectIcon}>{subject.icon}</Text>
+            <Text style={styles.subjectName}>{subject.name}</Text>
+          </View>
           <Text style={styles.question}>{currentProblem.question}</Text>
         </View>
 
@@ -134,34 +134,18 @@ export default function ProblemScreen() {
                 disabled={showResult}
                 style={({ pressed }) => [
                   styles.optionButton,
-                  isSelected && styles.optionButtonSelected,
+                  isSelected && !showResult && { borderColor: subject.color },
                   showCorrect && styles.optionButtonCorrect,
                   showWrong && styles.optionButtonWrong,
-                  !showResult && pressed && styles.optionButtonPressed,
+                  !showResult && pressed && { opacity: 0.7 },
                 ]}
               >
-                <View
-                  style={[
-                    styles.optionNumberCircle,
-                    isSelected && styles.optionNumberCircleSelected,
-                    showCorrect && styles.optionNumberCircleCorrect,
-                    showWrong && styles.optionNumberCircleWrong,
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.optionNumber,
-                      (isSelected || showCorrect || showWrong) && styles.optionNumberSelected,
-                    ]}
-                  >
-                    {index + 1}
-                  </Text>
-                </View>
                 <Text
                   style={[
                     styles.optionText,
-                    isSelected && styles.optionTextSelected,
-                    (showCorrect || showWrong) && styles.optionTextResult,
+                    isSelected && !showResult && { color: subject.color },
+                    showCorrect && { color: '#4CAF50' },
+                    showWrong && { color: '#FF5252' },
                   ]}
                 >
                   {option}
@@ -177,10 +161,19 @@ export default function ProblemScreen() {
           })}
         </View>
 
+        {/* Result Feedback */}
+        {showResult && (
+          <View style={[styles.resultBanner, isCorrect ? styles.resultCorrect : styles.resultWrong]}>
+            <Text style={styles.resultEmoji}>{isCorrect ? '🎉' : '💡'}</Text>
+            <Text style={styles.resultText}>
+              {isCorrect ? '정답입니다!' : '틀렸습니다. 다시 확인해보세요.'}
+            </Text>
+          </View>
+        )}
       </ScrollView>
 
       {/* Bottom Button */}
-      <View style={styles.bottomSection}>
+      <View style={[styles.bottomSection, { paddingBottom: insets.bottom + 16 }]}>
         {!showResult ? (
           <Pressable
             onPress={handleSubmit}
@@ -189,7 +182,7 @@ export default function ProblemScreen() {
               styles.submitButton,
               { backgroundColor: subject.color },
               selectedOption === null && styles.submitButtonDisabled,
-              pressed && selectedOption !== null && styles.submitButtonPressed,
+              pressed && selectedOption !== null && { opacity: 0.85 },
             ]}
           >
             <Text style={styles.submitButtonText}>확인</Text>
@@ -200,34 +193,15 @@ export default function ProblemScreen() {
             style={({ pressed }) => [
               styles.submitButton,
               { backgroundColor: subject.color },
-              pressed && styles.submitButtonPressed,
+              pressed && { opacity: 0.85 },
             ]}
           >
             <Text style={styles.submitButtonText}>
-              {currentProblemIndex === SAMPLE_PROBLEMS.length - 1 ? '완료' : '계속하기'}
+              {currentProblemIndex === SAMPLE_PROBLEMS.length - 1 ? '완료' : '다음'}
             </Text>
           </Pressable>
         )}
       </View>
-
-      {/* Result Modal */}
-      <Modal
-        visible={showResult}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={handleNext}
-      >
-        <TouchableWithoutFeedback onPress={handleNext}>
-          <View style={styles.modalOverlay}>
-            <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
-              <View style={[styles.resultModal, isCorrect ? styles.resultCorrect : styles.resultWrong]}>
-                <Text style={styles.resultEmoji}>{isCorrect ? '🎉' : '😢'}</Text>
-                <Text style={styles.resultText}>{isCorrect ? '좋아요!' : '오답입니다'}</Text>
-              </View>
-            </TouchableWithoutFeedback>
-          </View>
-        </TouchableWithoutFeedback>
-      </Modal>
     </View>
   );
 }
@@ -235,101 +209,92 @@ export default function ProblemScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.neutral.white,
+    backgroundColor: colors.neutral.gray50,
   },
   header: {
-    paddingTop: 12,
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     paddingBottom: 16,
     backgroundColor: colors.neutral.white,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border.light,
+    borderBottomColor: colors.neutral.gray100,
+  },
+  headerTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
   },
   quitButton: {
-    width: 40,
-    height: 40,
+    width: 36,
+    height: 36,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 12,
+    borderRadius: 18,
+    backgroundColor: colors.neutral.gray50,
   },
-  progressBarContainer: {
-    overflow: 'hidden',
+  problemCounter: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: colors.text.primary,
+  },
+  placeholder: {
+    width: 36,
   },
   progressBarBackground: {
-    height: 4,
-    backgroundColor: colors.border.light,
-    borderRadius: 2,
+    height: 6,
+    backgroundColor: colors.neutral.gray100,
+    borderRadius: 3,
     overflow: 'hidden',
   },
   progressBarFill: {
     height: '100%',
-    borderRadius: 2,
+    borderRadius: 3,
   },
   content: {
     flex: 1,
   },
   contentContainer: {
     paddingHorizontal: 20,
-    paddingTop: 40,
+    paddingTop: 32,
     paddingBottom: 20,
   },
-  subjectInfo: {
-    alignItems: 'center',
-    marginBottom: 40,
+  questionSection: {
+    marginBottom: 32,
   },
-  iconContainer: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+  subjectBadge: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 12,
+    gap: 8,
+    marginBottom: 20,
   },
-  icon: {
-    fontSize: 32,
+  subjectIcon: {
+    fontSize: 20,
   },
   subjectName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.text.primary,
-    marginBottom: 4,
-  },
-  problemCounter: {
     fontSize: 14,
+    fontWeight: '700',
     color: colors.text.secondary,
   },
-  questionSection: {
-    marginBottom: 40,
-  },
   question: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: 'bold',
     color: colors.text.primary,
-    lineHeight: 36,
-    textAlign: 'center',
+    lineHeight: 32,
+    letterSpacing: -0.5,
   },
   optionsSection: {
     gap: 12,
-    marginBottom: 30,
   },
   optionButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 16,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    backgroundColor: '#F5F5F5',
+    justifyContent: 'space-between',
+    paddingVertical: 18,
+    paddingHorizontal: 20,
+    borderRadius: 16,
+    backgroundColor: colors.neutral.white,
     borderWidth: 2,
-    borderColor: '#E0E0E0',
-    gap: 12,
-  },
-  optionButtonPressed: {
-    backgroundColor: colors.primary[50],
-    borderColor: colors.primary[300],
-  },
-  optionButtonSelected: {
-    backgroundColor: colors.primary[50],
-    borderColor: colors.primary[500],
+    borderColor: colors.neutral.gray200,
   },
   optionButtonCorrect: {
     backgroundColor: '#E8F5E9',
@@ -339,102 +304,53 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFEBEE',
     borderColor: '#FF5252',
   },
-  optionNumberCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 2,
-    borderColor: '#D0D0D0',
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
-  },
-  optionNumberCircleSelected: {
-    backgroundColor: colors.primary[500],
-    borderColor: colors.primary[500],
-  },
-  optionNumberCircleCorrect: {
-    backgroundColor: '#4CAF50',
-    borderColor: '#4CAF50',
-  },
-  optionNumberCircleWrong: {
-    backgroundColor: '#FF5252',
-    borderColor: '#FF5252',
-  },
-  optionNumber: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: colors.text.primary,
-  },
-  optionNumberSelected: {
-    color: colors.neutral.white,
-  },
   optionText: {
     fontSize: 16,
     color: colors.text.primary,
-    flex: 1,
-    fontWeight: '500',
-  },
-  optionTextSelected: {
-    color: colors.primary[500],
     fontWeight: '600',
-  },
-  optionTextResult: {
-    fontWeight: '600',
-  },
-  modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
   },
-  resultModal: {
-    paddingVertical: 40,
-    paddingHorizontal: 32,
-    borderRadius: 24,
+  resultBanner: {
+    flexDirection: 'row',
     alignItems: 'center',
-    minWidth: 200,
+    gap: 12,
+    marginTop: 24,
+    padding: 20,
+    borderRadius: 16,
   },
   resultCorrect: {
     backgroundColor: '#E8F5E9',
   },
   resultWrong: {
-    backgroundColor: '#FFEBEE',
+    backgroundColor: '#FFF3E0',
   },
   resultEmoji: {
-    fontSize: 60,
-    marginBottom: 16,
+    fontSize: 32,
   },
   resultText: {
-    fontSize: 24,
-    fontWeight: 'bold',
+    fontSize: 16,
+    fontWeight: '700',
     color: colors.text.primary,
+    flex: 1,
   },
   bottomSection: {
     paddingHorizontal: 20,
-    paddingVertical: 16,
-    paddingBottom: 24,
+    paddingTop: 16,
     backgroundColor: colors.neutral.white,
     borderTopWidth: 1,
-    borderTopColor: colors.border.light,
+    borderTopColor: colors.neutral.gray100,
   },
   submitButton: {
     paddingVertical: 16,
-    paddingHorizontal: 20,
-    borderRadius: 12,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
   },
   submitButtonDisabled: {
-    backgroundColor: colors.border.light,
-    opacity: 0.6,
-  },
-  submitButtonPressed: {
-    opacity: 0.8,
+    backgroundColor: colors.neutral.gray200,
   },
   submitButtonText: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: 'bold',
     color: colors.neutral.white,
   },

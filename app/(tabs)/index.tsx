@@ -46,7 +46,7 @@ export default function TabOneScreen() {
       >
         {/* 커스텀 헤더 */}
         <View style={[styles.header, { paddingTop: insets.top + 16 }]}>
-          <Text style={styles.headerTitle}>학습 대시보드</Text>
+          <Text style={styles.headerTitle}>앱 이름</Text>
         </View>
 
         <TodaySessionCard

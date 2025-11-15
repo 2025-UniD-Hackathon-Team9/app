@@ -1,5 +1,6 @@
 import { View, Text, StyleSheet, ScrollView, Pressable, StatusBar } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { colors } from "@/constants/colors";
 
@@ -24,6 +25,7 @@ const SAMPLE_ACTIVITY_DATA = [
 
 export default function SubjectScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
   const subject = SUBJECT_INFO[id] || { name: '과목', icon: '📖', color: colors.primary[500] };
 
@@ -52,13 +54,11 @@ export default function SubjectScreen() {
   return (
     <ScrollView style={styles.container}>
       <StatusBar barStyle="dark-content" />
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + 20 }]}>
         {/* 뒤로가기 버튼 */}
-        <View style={styles.topBar}>
-          <Pressable style={styles.backButton} onPress={() => router.back()}>
-            <MaterialIcons name="arrow-back" size={24} color={colors.text.primary} />
-          </Pressable>
-        </View>
+        <Pressable style={styles.backButton} onPress={() => router.back()}>
+          <MaterialIcons name="arrow-back" size={24} color={colors.text.primary} />
+        </Pressable>
 
         {/* 타이틀 섹션 */}
         <View style={styles.titleSection}>
@@ -161,7 +161,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.neutral.gray50,
   },
   header: {
-    paddingTop: 60,
     paddingBottom: 32,
     paddingHorizontal: 24,
     backgroundColor: colors.neutral.white,
@@ -171,9 +170,6 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 2,
   },
-  topBar: {
-    marginBottom: 20,
-  },
   backButton: {
     width: 40,
     height: 40,
@@ -181,6 +177,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.neutral.gray50,
     justifyContent: 'center',
     alignItems: 'center',
+    marginBottom: 20,
   },
   titleSection: {
     flexDirection: 'row',

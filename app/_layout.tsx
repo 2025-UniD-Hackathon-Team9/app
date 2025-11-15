@@ -46,28 +46,21 @@ export default function RootLayout() {
 function RootLayoutNav() {
   return (
     <ThemeProvider value={DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false, title: '홈' }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="modal" options={{ presentation: 'modal', headerShown: true }} />
         <Stack.Screen
           name="camera"
           options={{
             presentation: 'modal',
-            headerShown: false,
             contentStyle: { backgroundColor: 'black' }
           }}
         />
-        <Stack.Screen
-          name="subject/[id]"
-          options={{
-            headerShown: false,
-          }}
-        />
+        <Stack.Screen name="subject" />
         <Stack.Screen
           name="subject-select"
           options={{
             presentation: 'modal',
-            headerShown: false,
           }}
         />
       </Stack>
