@@ -4,10 +4,18 @@ import { useRouter } from 'expo-router';
 import { colors } from '@/constants/colors';
 import type { Subject } from '@/src/types';
 
+/**
+ * Props for the SubjectSelector component
+ */
 interface SubjectSelectorProps {
+  /** Array of subjects to display */
   subjects: Subject[];
 }
 
+/**
+ * Horizontal scrollable subject selector component
+ * Displays subject cards and an add button to create new subjects
+ */
 export default function SubjectSelector({
   subjects,
 }: SubjectSelectorProps) {

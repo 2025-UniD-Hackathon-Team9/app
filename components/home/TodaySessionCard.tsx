@@ -3,12 +3,22 @@ import { View, Text, StyleSheet } from 'react-native';
 import { colors } from '@/constants/colors';
 import { calculateProgress, getMotivationMessage, getProgressEmoji } from '@/src/utils';
 
+/**
+ * Props for the TodaySessionCard component
+ */
 interface TodaySessionCardProps {
+  /** Number of sessions completed today */
   completedSessions: number;
+  /** Total number of sessions planned for today */
   totalSessions: number;
+  /** Name of the subject */
   subject: string;
 }
 
+/**
+ * Card component displaying today's study session progress
+ * Shows completed sessions, progress bar, and motivational message
+ */
 export default function TodaySessionCard({
   completedSessions,
   totalSessions,

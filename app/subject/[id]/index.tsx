@@ -10,13 +10,13 @@ import { getDayOfWeek, getActivityLevel } from '@/src/utils';
 
 // 샘플 활동 데이터 (최근 7일)
 const SAMPLE_ACTIVITY_DATA: StudyRecord[] = [
-  { date: '2025-11-09', sessions: 0 },
-  { date: '2025-11-10', sessions: 6 },
-  { date: '2025-11-11', sessions: 0 },
-  { date: '2025-11-12', sessions: 3 },
-  { date: '2025-11-13', sessions: 5 },
-  { date: '2025-11-14', sessions: 0 },
-  { date: '2025-11-15', sessions: 2 },
+  { date: '2025-11-09', sessionsCompleted: 0 },
+  { date: '2025-11-10', sessionsCompleted: 6 },
+  { date: '2025-11-11', sessionsCompleted: 0 },
+  { date: '2025-11-12', sessionsCompleted: 3 },
+  { date: '2025-11-13', sessionsCompleted: 5 },
+  { date: '2025-11-14', sessionsCompleted: 0 },
+  { date: '2025-11-15', sessionsCompleted: 2 },
 ];
 
 export default function SubjectScreen() {

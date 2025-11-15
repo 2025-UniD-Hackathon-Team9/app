@@ -3,10 +3,18 @@ import { Pressable, StyleSheet } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { colors } from '@/constants/colors';
 
+/**
+ * Props for the FloatingActionButton component
+ */
 interface FloatingActionButtonProps {
+  /** Callback function when button is pressed */
   onPress: () => void;
 }
 
+/**
+ * Floating action button component positioned at bottom-right of screen
+ * Typically used for primary actions like adding new content
+ */
 export default function FloatingActionButton({ onPress }: FloatingActionButtonProps) {
   return (
     <Pressable

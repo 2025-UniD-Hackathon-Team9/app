@@ -12,11 +12,20 @@ import {
 } from '@/src/utils';
 import { DAYS_OF_WEEK } from '@/src/constants';
 
+/**
+ * Props for the StudyCalendar component
+ */
 interface StudyCalendarProps {
+  /** Array of study records with completion data */
   studyRecords: StudyRecord[];
+  /** The month to display in the calendar */
   currentMonth: Date;
 }
 
+/**
+ * Calendar component displaying study activity for a month
+ * Shows activity levels with color coding and a legend
+ */
 export default function StudyCalendar({ studyRecords, currentMonth }: StudyCalendarProps) {
   const getDateString = (day: number): string => {
     const year = currentMonth.getFullYear();
@@ -91,7 +100,9 @@ export default function StudyCalendar({ studyRecords, currentMonth }: StudyCalen
               <View
                 style={[
                   styles.dayContent,
-                  level > 0 && styles[`level${level}` as keyof typeof styles],
+                  level === 1 && styles.level1,
+                  level === 2 && styles.level2,
+                  level === 3 && styles.level3,
                   isTodayDate && styles.today,
                 ]}
               >
