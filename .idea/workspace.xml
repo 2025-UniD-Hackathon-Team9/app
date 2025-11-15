@@ -6,10 +6,6 @@
   <component name="ChangeListManager">
     <list default="true" id="5dc50da9-a525-4901-b2f2-aa12c1dd97d8" name="변경" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/(tabs)/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/(tabs)/index.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/_layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/_layout.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/subject/[id].tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/subject/[id]/problem.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/subject/[id]/problem.tsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

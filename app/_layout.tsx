@@ -63,6 +63,12 @@ function RootLayoutNav() {
             presentation: 'modal',
           }}
         />
+        <Stack.Screen
+          name="add-subject"
+          options={{
+            presentation: 'modal',
+          }}
+        />
       </Stack>
     </ThemeProvider>
   );

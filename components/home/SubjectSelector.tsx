@@ -49,6 +49,18 @@ export default function SubjectSelector({
             </Pressable>
           );
         })}
+
+        {/* 과목 추가 버튼 */}
+        <Pressable
+          style={({ pressed }) => [
+            styles.addButton,
+            pressed && styles.addButtonPressed,
+          ]}
+          onPress={() => router.push('/add-subject')}
+        >
+          <Text style={styles.addIcon}>+</Text>
+          <Text style={styles.addText}>추가</Text>
+        </Pressable>
       </ScrollView>
     </View>
   );
@@ -98,6 +110,33 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     color: colors.neutral.white,
+    letterSpacing: -0.3,
+  },
+  addButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderRadius: 16,
+    minWidth: 110,
+    backgroundColor: colors.neutral.white,
+    borderWidth: 2,
+    borderColor: colors.neutral.gray200,
+    borderStyle: 'dashed',
+  },
+  addButtonPressed: {
+    opacity: 0.7,
+  },
+  addIcon: {
+    fontSize: 24,
+    fontWeight: '600',
+    color: colors.text.secondary,
+  },
+  addText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text.secondary,
     letterSpacing: -0.3,
   },
 });
