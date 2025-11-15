@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { View, Text, StyleSheet, Pressable, Alert } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Alert, StatusBar } from 'react-native';
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -54,6 +54,7 @@ export default function CameraScreen() {
 
   return (
     <View style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
       <CameraView ref={cameraRef} style={styles.camera} facing={facing}>
         <View style={styles.header}>
           <Pressable style={styles.closeButton} onPress={() => router.back()}>
@@ -81,6 +82,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.neutral.black,
+    margin: 0,
+    padding: 0,
   },
   permissionContainer: {
     flex: 1,
@@ -108,6 +111,8 @@ const styles = StyleSheet.create({
   },
   camera: {
     flex: 1,
+    width: '100%',
+    height: '100%',
   },
   header: {
     paddingTop: 60,
