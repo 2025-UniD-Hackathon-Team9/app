@@ -1,4 +1,5 @@
 import { ScrollView, View, StyleSheet } from 'react-native';
+import { useRouter } from 'expo-router';
 import FloatingActionButton from '@/components/layout/FloatingActionButton';
 import TodaySessionCard from '@/components/home/TodaySessionCard';
 import SubjectSelector from '@/components/home/SubjectSelector';
@@ -27,9 +28,10 @@ const SAMPLE_STUDY_RECORDS = [
 ];
 
 export default function TabOneScreen() {
+  const router = useRouter();
+
   const handlePdfUpload = () => {
-    console.log('PDF Upload button pressed');
-    // TODO: PDF 업로드 기능 구현
+    router.push('/camera');
   };
 
   return (
