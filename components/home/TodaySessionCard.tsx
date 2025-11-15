@@ -1,9 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet, Dimensions } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { MaterialIcons } from '@expo/vector-icons';
+import { View, Text, StyleSheet } from 'react-native';
 import { colors } from '@/constants/colors';
-import Svg, { Circle } from 'react-native-svg';
 
 interface TodaySessionCardProps {
   completedSessions: number;
@@ -11,158 +8,178 @@ interface TodaySessionCardProps {
   subject: string;
 }
 
-const { width } = Dimensions.get('window');
-const CIRCLE_SIZE = 140;
-const STROKE_WIDTH = 12;
-const RADIUS = (CIRCLE_SIZE - STROKE_WIDTH) / 2;
-const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
-
 export default function TodaySessionCard({
   completedSessions,
   totalSessions,
   subject
 }: TodaySessionCardProps) {
   const progress = totalSessions > 0 ? completedSessions / totalSessions : 0;
-  const strokeDashoffset = CIRCUMFERENCE * (1 - progress);
+
+  const getMotivationMessage = () => {
+    if (completedSessions === 0) return '오늘도 화이팅! 🎯';
+    if (progress < 0.5) return '좋아요! 계속 가볼까요? 💪';
+    if (progress < 1) return '거의 다 왔어요! 🔥';
+    return '완벽해요! 🎉';
+  };
+
+  const getEmoji = () => {
+    if (completedSessions === 0) return '📚';
+    if (progress < 0.5) return '💪';
+    if (progress < 1) return '🔥';
+    return '🎉';
+  };
 
   return (
-    <LinearGradient
-      colors={[colors.primary[500], colors.primary[700]]}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={styles.container}
-    >
-      <View style={styles.header}>
-        <View style={styles.titleContainer}>
-          <MaterialIcons name="local-fire-department" size={28} color={colors.neutral.white} />
-          <View>
-            <Text style={styles.greeting}>오늘 하루도 화이팅!</Text>
+    <View style={styles.container}>
+      <View style={styles.content}>
+        {/* 헤더 */}
+        <View style={styles.header}>
+          <View style={styles.subjectBadge}>
+            <Text style={styles.subjectText}>{subject}</Text>
+          </View>
+          <Text style={styles.greeting}>{getMotivationMessage()}</Text>
+        </View>
+
+        {/* 메인 프로그레스 */}
+        <View style={styles.progressSection}>
+          <View style={styles.progressInfo}>
+            <Text style={styles.progressEmoji}>{getEmoji()}</Text>
+            <View style={styles.progressNumbers}>
+              <Text style={styles.completedNumber}>{completedSessions}</Text>
+              <Text style={styles.separator}>/</Text>
+              <Text style={styles.totalNumber}>{totalSessions}</Text>
+            </View>
+            <Text style={styles.progressLabel}>문제 완료</Text>
+          </View>
+
+          {/* 프로그레스 바 */}
+          <View style={styles.progressBarContainer}>
+            <View style={styles.progressBarBackground}>
+              <View
+                style={[
+                  styles.progressBarFill,
+                  { width: `${Math.min(progress * 100, 100)}%` }
+                ]}
+              />
+            </View>
           </View>
         </View>
-      </View>
 
-      <View style={styles.circleContainer}>
-        <Svg width={CIRCLE_SIZE} height={CIRCLE_SIZE}>
-          {/* Background circle */}
-          <Circle
-            cx={CIRCLE_SIZE / 2}
-            cy={CIRCLE_SIZE / 2}
-            r={RADIUS}
-            stroke="rgba(255, 255, 255, 0.2)"
-            strokeWidth={STROKE_WIDTH}
-            fill="none"
-          />
-          {/* Progress circle */}
-          <Circle
-            cx={CIRCLE_SIZE / 2}
-            cy={CIRCLE_SIZE / 2}
-            r={RADIUS}
-            stroke={colors.accent[500]}
-            strokeWidth={STROKE_WIDTH}
-            fill="none"
-            strokeDasharray={CIRCUMFERENCE}
-            strokeDashoffset={strokeDashoffset}
-            strokeLinecap="round"
-            rotation="-90"
-            origin={`${CIRCLE_SIZE / 2}, ${CIRCLE_SIZE / 2}`}
-          />
-        </Svg>
-        <View style={styles.circleContent}>
-          <Text style={styles.percentageText}>{Math.round(progress * 100)}%</Text>
-        </View>
-      </View>
-
-      <View style={styles.footer}>
-        {completedSessions >= totalSessions ? (
-          <View style={styles.badge}>
-            <MaterialIcons name="celebration" size={20} color={colors.accent[500]} />
-            <Text style={styles.badgeText}>목표 달성 완료! 🎉</Text>
-          </View>
-        ) : (
-          <View style={styles.badge}>
-            <MaterialIcons name="trending-up" size={20} color={colors.accent[500]} />
-            <Text style={styles.badgeText}>
-              {totalSessions - completedSessions}개 세션만 더 하면 완료!
-            </Text>
+        {/* 성취 배지 */}
+        {completedSessions >= totalSessions && (
+          <View style={styles.achievementBadge}>
+            <Text style={styles.achievementText}>✨ 오늘의 목표 달성! ✨</Text>
           </View>
         )}
       </View>
-    </LinearGradient>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
+    backgroundColor: colors.neutral.white,
     borderRadius: 24,
-    padding: 24,
     marginHorizontal: 20,
     marginTop: 20,
     marginBottom: 16,
     shadowColor: colors.shadow,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 16,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 4,
+  },
+  content: {
+    padding: 28,
   },
   header: {
-    marginBottom: 24,
-  },
-  titleContainer: {
-    flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    marginBottom: 32,
+  },
+  subjectBadge: {
+    backgroundColor: colors.primary[50],
+    paddingVertical: 8,
+    paddingHorizontal: 20,
+    borderRadius: 100,
+    marginBottom: 16,
+  },
+  subjectText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: colors.primary[600],
   },
   greeting: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: colors.neutral.white,
-  },
-  subject: {
-    fontSize: 14,
-    color: 'rgba(255, 255, 255, 0.8)',
-    marginTop: 2,
-  },
-  circleContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginVertical: 20,
-  },
-  circleContent: {
-    position: 'absolute',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  percentageText: {
-    fontSize: 42,
+    fontSize: 22,
     fontWeight: 'bold',
-    color: colors.neutral.white,
+    color: colors.text.primary,
+    textAlign: 'center',
   },
-  completedText: {
-    fontSize: 16,
-    color: 'rgba(255, 255, 255, 0.9)',
-    marginTop: 4,
-  },
-  sessionLabel: {
-    fontSize: 12,
-    color: 'rgba(255, 255, 255, 0.7)',
-    marginTop: 2,
-  },
-  footer: {
-    marginTop: 8,
-  },
-  badge: {
-    flexDirection: 'row',
+  progressSection: {
     alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 16,
-    gap: 8,
   },
-  badgeText: {
-    fontSize: 14,
+  progressInfo: {
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  progressEmoji: {
+    fontSize: 56,
+    marginBottom: 16,
+  },
+  progressNumbers: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    marginBottom: 8,
+  },
+  completedNumber: {
+    fontSize: 48,
+    fontWeight: 'bold',
+    color: colors.primary[500],
+    letterSpacing: -2,
+  },
+  separator: {
+    fontSize: 36,
+    fontWeight: 'bold',
+    color: colors.neutral.gray300,
+    marginHorizontal: 8,
+  },
+  totalNumber: {
+    fontSize: 36,
+    fontWeight: 'bold',
+    color: colors.neutral.gray400,
+    letterSpacing: -1,
+  },
+  progressLabel: {
+    fontSize: 16,
     fontWeight: '600',
-    color: colors.neutral.white,
+    color: colors.text.secondary,
+  },
+  progressBarContainer: {
+    width: '100%',
+    marginBottom: 20,
+  },
+  progressBarBackground: {
+    height: 16,
+    backgroundColor: colors.neutral.gray100,
+    borderRadius: 100,
+    overflow: 'hidden',
+  },
+  progressBarFill: {
+    height: '100%',
+    backgroundColor: colors.primary[500],
+    borderRadius: 100,
+  },
+  achievementBadge: {
+    backgroundColor: colors.primary[50],
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 100,
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: colors.primary[200],
+  },
+  achievementText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: colors.primary[700],
   },
 });
