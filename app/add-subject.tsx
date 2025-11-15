@@ -3,31 +3,15 @@ import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { colors } from '@/constants/colors';
+import { AVAILABLE_SUBJECT_ICONS, AVAILABLE_SUBJECT_COLORS } from '@/src/constants';
 import { useState } from 'react';
-
-const AVAILABLE_ICONS = ['📐', '⚛️', '🧪', '📚', '✏️', '🎨', '🎵', '⚽', '🌍', '💻', '📖', '🔬', '🏛️', '📊'];
-
-const AVAILABLE_COLORS = [
-  colors.primary[500],
-  '#FF6B6B',
-  '#4ECDC4',
-  '#95E1D3',
-  '#F38181',
-  '#FF9F43',
-  '#54A0FF',
-  '#5F27CD',
-  '#00D2D3',
-  '#1DD1A1',
-  '#EE5A6F',
-  '#C44569',
-];
 
 export default function AddSubjectScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [subjectName, setSubjectName] = useState('');
-  const [selectedIcon, setSelectedIcon] = useState(AVAILABLE_ICONS[0]);
-  const [selectedColor, setSelectedColor] = useState(AVAILABLE_COLORS[0]);
+  const [selectedIcon, setSelectedIcon] = useState(AVAILABLE_SUBJECT_ICONS[0]);
+  const [selectedColor, setSelectedColor] = useState(AVAILABLE_SUBJECT_COLORS[0]);
 
   const handleSave = () => {
     // TODO: 과목 저장 로직
@@ -68,7 +52,7 @@ export default function AddSubjectScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>아이콘</Text>
           <View style={styles.iconGrid}>
-            {AVAILABLE_ICONS.map((icon) => (
+            {AVAILABLE_SUBJECT_ICONS.map((icon) => (
               <Pressable
                 key={icon}
                 style={[
@@ -87,7 +71,7 @@ export default function AddSubjectScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>색상</Text>
           <View style={styles.colorGrid}>
-            {AVAILABLE_COLORS.map((color) => (
+            {AVAILABLE_SUBJECT_COLORS.map((color) => (
               <Pressable
                 key={color}
                 style={[

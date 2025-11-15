@@ -3,17 +3,13 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { colors } from "@/constants/colors";
-
-const SUBJECT_INFO: { [key: string]: { name: string; icon: string; color: string } } = {
-  math: { name: '수학', icon: '📐', color: colors.primary[500] },
-  physics: { name: '물리', icon: '⚛️', color: '#FF6B6B' },
-  chemistry: { name: '화학', icon: '🧪', color: '#4ECDC4' },
-  english: { name: '영어', icon: '📚', color: '#95E1D3' },
-  korean: { name: '국어', icon: '✏️', color: '#F38181' },
-};
+import { DEFAULT_SUBJECTS } from '@/src/constants';
+import type { StudyRecord } from '@/src/types';
+import { getSubjectById, getActivityColor } from '@/src/utils';
+import { getDayOfWeek, getActivityLevel } from '@/src/utils';
 
 // 샘플 활동 데이터 (최근 7일)
-const SAMPLE_ACTIVITY_DATA = [
+const SAMPLE_ACTIVITY_DATA: StudyRecord[] = [
   { date: '2025-11-09', sessions: 0 },
   { date: '2025-11-10', sessions: 6 },
   { date: '2025-11-11', sessions: 0 },
@@ -27,28 +23,11 @@ export default function SubjectScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const subject = SUBJECT_INFO[id] || { name: '과목', icon: '📖', color: colors.primary[500] };
-
-  const getActivityLevel = (sessions: number): number => {
-    if (sessions === 0) return 0;
-    if (sessions < 3) return 1;
-    if (sessions < 5) return 2;
-    return 3;
-  };
-
-  const getDayOfWeek = (dateStr: string): string => {
-    const date = new Date(dateStr);
-    const days = ['일', '월', '화', '수', '목', '금', '토'];
-    return days[date.getDay()];
-  };
-
-  const getActivityColor = (level: number) => {
-    if (level === 0) return colors.neutral.gray100;
-    const baseColor = subject.color;
-    // 간단하게 opacity로 레벨 표현
-    if (level === 1) return `${baseColor}40`; // 25% opacity
-    if (level === 2) return `${baseColor}80`; // 50% opacity
-    return baseColor; // 100% opacity
+  const subject = getSubjectById(id) || { 
+    id: id,
+    name: '과목', 
+    icon: '📖', 
+    color: colors.primary[500] 
   };
 
   return (
@@ -75,23 +54,23 @@ export default function SubjectScreen() {
           <Text style={styles.activitySectionTitle}>최근 7일 활동</Text>
           <View style={styles.activityGrid}>
             {SAMPLE_ACTIVITY_DATA.map((day, index) => {
-              const level = getActivityLevel(day.sessions);
+              const level = getActivityLevel(day.sessionsCompleted);
               const isToday = index === SAMPLE_ACTIVITY_DATA.length - 1;
               return (
                 <View key={day.date} style={styles.activityDayContainer}>
                   <View
                     style={[
                       styles.activityDay,
-                      { backgroundColor: getActivityColor(level) },
+                      { backgroundColor: getActivityColor(subject.color, level, colors.neutral.gray100) },
                       isToday && { borderWidth: 2, borderColor: subject.color },
                     ]}
                   >
-                    {day.sessions > 0 && (
+                    {day.sessionsCompleted > 0 && (
                       <Text style={[
                         styles.activityNumber,
                         level === 1 && { color: subject.color }
                       ]}>
-                        {day.sessions}
+                        {day.sessionsCompleted}
                       </Text>
                     )}
                   </View>

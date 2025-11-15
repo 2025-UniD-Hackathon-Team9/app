@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { colors } from '@/constants/colors';
+import { calculateProgress, getMotivationMessage, getProgressEmoji } from '@/src/utils';
 
 interface TodaySessionCardProps {
   completedSessions: number;
@@ -13,21 +14,7 @@ export default function TodaySessionCard({
   totalSessions,
   subject
 }: TodaySessionCardProps) {
-  const progress = totalSessions > 0 ? completedSessions / totalSessions : 0;
-
-  const getMotivationMessage = () => {
-    if (completedSessions === 0) return '오늘도 화이팅! 🎯';
-    if (progress < 0.5) return '좋아요! 계속 가볼까요? 💪';
-    if (progress < 1) return '거의 다 왔어요! 🔥';
-    return '완벽해요! 🎉';
-  };
-
-  const getEmoji = () => {
-    if (completedSessions === 0) return '📚';
-    if (progress < 0.5) return '💪';
-    if (progress < 1) return '🔥';
-    return '🎉';
-  };
+  const progress = calculateProgress(completedSessions, totalSessions);
 
   return (
     <View style={styles.container}>
@@ -36,7 +23,7 @@ export default function TodaySessionCard({
           <Text style={styles.label}>오늘의 학습</Text>
           <Text style={styles.subject}>{subject}</Text>
         </View>
-        <Text style={styles.emoji}>{getEmoji()}</Text>
+        <Text style={styles.emoji}>{getProgressEmoji(completedSessions, totalSessions)}</Text>
       </View>
 
       <View style={styles.progressContainer}>
@@ -57,7 +44,7 @@ export default function TodaySessionCard({
         </View>
       </View>
 
-      <Text style={styles.motivationText}>{getMotivationMessage()}</Text>
+      <Text style={styles.motivationText}>{getMotivationMessage(completedSessions, totalSessions)}</Text>
     </View>
   );
 }

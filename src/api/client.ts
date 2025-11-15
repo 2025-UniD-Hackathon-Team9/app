@@ -1,84 +1,132 @@
 /**
- * API Client 설정
+ * API Client Configuration
  *
- * 모든 API 요청에 사용되는 기본 클라이언트입니다.
- * axios 또는 fetch를 사용할 수 있습니다.
+ * Centralized HTTP client for all API requests with error handling and type safety.
  */
 
-// Axios 사용 예시 (추천)
-// npm install axios
-/*
-import axios from 'axios';
-
-export const apiClient = axios.create({
-  baseURL: process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000',
-  timeout: 10000,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-// 요청 인터셉터
-apiClient.interceptors.request.use(
-  async (config) => {
-    // 토큰 추가 등
-    // const token = await getToken();
-    // if (token) {
-    //   config.headers.Authorization = `Bearer ${token}`;
-    // }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
-
-// 응답 인터셉터
-apiClient.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    // 에러 처리
-    if (error.response?.status === 401) {
-      // 로그아웃 처리
-    }
-    return Promise.reject(error);
-  }
-);
-*/
-
-// Fetch 사용 예시
 const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000';
 
+/**
+ * Custom error class for API errors
+ */
+export class ApiError extends Error {
+  constructor(
+    message: string,
+    public status: number,
+    public data?: any
+  ) {
+    super(message);
+    this.name = 'ApiError';
+  }
+}
+
+/**
+ * Type for HTTP methods
+ */
+type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
+
+/**
+ * Common request options
+ */
+interface RequestOptions {
+  headers?: Record<string, string>;
+  body?: any;
+}
+
+/**
+ * Makes an HTTP request with error handling
+ * @param endpoint - API endpoint path
+ * @param method - HTTP method
+ * @param options - Request options
+ * @returns Promise with typed response data
+ */
+async function request<T>(
+  endpoint: string,
+  method: HttpMethod,
+  options?: RequestOptions
+): Promise<T> {
+  const url = `${API_URL}${endpoint}`;
+  
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...options?.headers,
+  };
+
+  const config: RequestInit = {
+    method,
+    headers,
+  };
+
+  if (options?.body && method !== 'GET') {
+    config.body = JSON.stringify(options.body);
+  }
+
+  try {
+    const response = await fetch(url, config);
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new ApiError(
+        errorData.message || `Request failed with status ${response.status}`,
+        response.status,
+        errorData
+      );
+    }
+
+    // Handle empty responses (e.g., 204 No Content)
+    if (response.status === 204) {
+      return {} as T;
+    }
+
+    return await response.json();
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw error;
+    }
+    // Network or other errors
+    throw new ApiError(
+      error instanceof Error ? error.message : 'Network request failed',
+      0
+    );
+  }
+}
+
+/**
+ * API client with typed methods
+ */
 export const apiClient = {
-  async get<T>(endpoint: string): Promise<T> {
-    const response = await fetch(`${API_URL}${endpoint}`);
-    if (!response.ok) throw new Error('Request failed');
-    return response.json();
+  /**
+   * GET request
+   */
+  get<T>(endpoint: string, headers?: Record<string, string>): Promise<T> {
+    return request<T>(endpoint, 'GET', { headers });
   },
 
-  async post<T>(endpoint: string, data: any): Promise<T> {
-    const response = await fetch(`${API_URL}${endpoint}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    if (!response.ok) throw new Error('Request failed');
-    return response.json();
+  /**
+   * POST request
+   */
+  post<T>(endpoint: string, data?: any, headers?: Record<string, string>): Promise<T> {
+    return request<T>(endpoint, 'POST', { body: data, headers });
   },
 
-  async put<T>(endpoint: string, data: any): Promise<T> {
-    const response = await fetch(`${API_URL}${endpoint}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    if (!response.ok) throw new Error('Request failed');
-    return response.json();
+  /**
+   * PUT request
+   */
+  put<T>(endpoint: string, data?: any, headers?: Record<string, string>): Promise<T> {
+    return request<T>(endpoint, 'PUT', { body: data, headers });
   },
 
-  async delete<T>(endpoint: string): Promise<T> {
-    const response = await fetch(`${API_URL}${endpoint}`, {
-      method: 'DELETE',
-    });
-    if (!response.ok) throw new Error('Request failed');
-    return response.json();
+  /**
+   * PATCH request
+   */
+  patch<T>(endpoint: string, data?: any, headers?: Record<string, string>): Promise<T> {
+    return request<T>(endpoint, 'PATCH', { body: data, headers });
+  },
+
+  /**
+   * DELETE request
+   */
+  delete<T>(endpoint: string, headers?: Record<string, string>): Promise<T> {
+    return request<T>(endpoint, 'DELETE', { headers });
   },
 };

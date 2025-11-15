@@ -2,13 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { colors } from '@/constants/colors';
-
-interface Subject {
-  id: string;
-  name: string;
-  icon: string;
-  color: string;
-}
+import type { Subject } from '@/src/types';
 
 interface SubjectSelectorProps {
   subjects: Subject[];
