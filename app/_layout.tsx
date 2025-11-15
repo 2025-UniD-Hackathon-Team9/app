@@ -58,7 +58,6 @@ function RootLayoutNav() {
               contentStyle: { backgroundColor: 'black' }
             }}
           />
-          <Stack.Screen name="subject" />
           <Stack.Screen
             name="subject-select"
             options={{
