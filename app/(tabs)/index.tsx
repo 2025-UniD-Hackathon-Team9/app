@@ -6,17 +6,11 @@ import TodaySessionCard from '@/components/home/TodaySessionCard';
 import SubjectSelector from '@/components/home/SubjectSelector';
 import StudyCalendar from '@/components/home/StudyCalendar';
 import { colors } from '@/constants/colors';
-
-const SUBJECTS = [
-  { id: 'math', name: '수학', icon: '📐', color: colors.primary[500] },
-  { id: 'physics', name: '물리', icon: '⚛️', color: '#FF6B6B' },
-  { id: 'chemistry', name: '화학', icon: '🧪', color: '#4ECDC4' },
-  { id: 'english', name: '영어', icon: '📚', color: '#95E1D3' },
-  { id: 'korean', name: '국어', icon: '✏️', color: '#F38181' },
-];
+import { DEFAULT_SUBJECTS } from '@/src/constants';
+import type { StudyRecord } from '@/src/types';
 
 // 샘플 데이터
-const SAMPLE_STUDY_RECORDS = [
+const SAMPLE_STUDY_RECORDS: StudyRecord[] = [
   { date: '2025-11-01', sessionsCompleted: 2 },
   { date: '2025-11-03', sessionsCompleted: 5 },
   { date: '2025-11-04', sessionsCompleted: 3 },
@@ -56,7 +50,7 @@ export default function TabOneScreen() {
         />
 
         <SubjectSelector
-          subjects={SUBJECTS}
+          subjects={DEFAULT_SUBJECTS}
         />
 
         <StudyCalendar

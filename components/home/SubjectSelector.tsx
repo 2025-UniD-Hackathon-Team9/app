@@ -2,18 +2,20 @@ import React from 'react';
 import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { colors } from '@/constants/colors';
+import type { Subject } from '@/src/types';
 
-interface Subject {
-  id: string;
-  name: string;
-  icon: string;
-  color: string;
-}
-
+/**
+ * SubjectSelector 컴포넌트의 Props
+ */
 interface SubjectSelectorProps {
+  /** 표시할 과목 배열 */
   subjects: Subject[];
 }
 
+/**
+ * 가로 스크롤 가능한 과목 선택 컴포넌트
+ * 과목 카드와 새 과목 생성 추가 버튼을 표시합니다
+ */
 export default function SubjectSelector({
   subjects,
 }: SubjectSelectorProps) {

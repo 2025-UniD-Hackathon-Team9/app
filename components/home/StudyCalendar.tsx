@@ -2,41 +2,36 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { colors } from '@/constants/colors';
+import type { StudyRecord } from '@/src/types';
+import {
+  getDaysInMonth,
+  formatDateToYYYYMMDD,
+  formatMonthName,
+  isToday,
+  getActivityLevel,
+} from '@/src/utils';
+import { DAYS_OF_WEEK } from '@/src/constants';
 
-interface StudyRecord {
-  date: string; // 'YYYY-MM-DD'
-  sessionsCompleted: number;
-}
-
+/**
+ * StudyCalendar 컴포넌트의 Props
+ */
 interface StudyCalendarProps {
+  /** 완료 데이터가 포함된 학습 기록 배열 */
   studyRecords: StudyRecord[];
+  /** 달력에 표시할 월 */
   currentMonth: Date;
 }
 
+/**
+ * 월별 학습 활동을 표시하는 달력 컴포넌트
+ * 색상 코딩과 범례로 활동 레벨을 표시합니다
+ */
 export default function StudyCalendar({ studyRecords, currentMonth }: StudyCalendarProps) {
-  const getDaysInMonth = (date: Date) => {
-    const year = date.getFullYear();
-    const month = date.getMonth();
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-    const daysInMonth = lastDay.getDate();
-    const startingDayOfWeek = firstDay.getDay();
-
-    return { daysInMonth, startingDayOfWeek };
-  };
-
-  const getStudyLevel = (sessionsCompleted: number): number => {
-    if (sessionsCompleted === 0) return 0;
-    if (sessionsCompleted < 3) return 1;
-    if (sessionsCompleted < 5) return 2;
-    return 3;
-  };
-
   const getDateString = (day: number): string => {
     const year = currentMonth.getFullYear();
-    const month = String(currentMonth.getMonth() + 1).padStart(2, '0');
-    const dayStr = String(day).padStart(2, '0');
-    return `${year}-${month}-${dayStr}`;
+    const month = currentMonth.getMonth();
+    const date = new Date(year, month, day);
+    return formatDateToYYYYMMDD(date);
   };
 
   const getSessionsForDate = (day: number): number => {
@@ -46,9 +41,8 @@ export default function StudyCalendar({ studyRecords, currentMonth }: StudyCalen
   };
 
   const { daysInMonth, startingDayOfWeek } = getDaysInMonth(currentMonth);
-  const weekDays = ['일', '월', '화', '수', '목', '금', '토'];
 
-  const monthName = currentMonth.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long' });
+  const monthName = formatMonthName(currentMonth);
 
   // 달력 그리드 생성
   const calendarDays: (number | null)[] = [];
@@ -72,7 +66,7 @@ export default function StudyCalendar({ studyRecords, currentMonth }: StudyCalen
 
       {/* 요일 헤더 */}
       <View style={styles.weekDaysRow}>
-        {weekDays.map((day, index) => (
+        {DAYS_OF_WEEK.map((day, index) => (
           <View key={index} style={styles.weekDayCell}>
             <Text
               style={[
@@ -94,26 +88,29 @@ export default function StudyCalendar({ studyRecords, currentMonth }: StudyCalen
           }
 
           const sessions = getSessionsForDate(day);
-          const level = getStudyLevel(sessions);
-          const isToday =
-            day === new Date().getDate() &&
-            currentMonth.getMonth() === new Date().getMonth() &&
-            currentMonth.getFullYear() === new Date().getFullYear();
+          const level = getActivityLevel(sessions);
+          const isTodayDate = isToday(
+            day,
+            currentMonth.getMonth(),
+            currentMonth.getFullYear()
+          );
 
           return (
             <View key={day} style={styles.dayCell}>
               <View
                 style={[
                   styles.dayContent,
-                  level > 0 && styles[`level${level}` as keyof typeof styles],
-                  isToday && styles.today,
+                  level === 1 && styles.level1,
+                  level === 2 && styles.level2,
+                  level === 3 && styles.level3,
+                  isTodayDate && styles.today,
                 ]}
               >
                 <Text
                   style={[
                     styles.dayNumber,
                     level > 0 && styles.dayNumberActive,
-                    isToday && styles.dayNumberToday,
+                    isTodayDate && styles.dayNumberToday,
                   ]}
                 >
                   {day}

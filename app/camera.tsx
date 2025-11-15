@@ -22,7 +22,7 @@ export default function CameraScreen() {
         <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
         <View style={styles.permissionContainer}>
           <Pressable style={styles.closeButtonPermission} onPress={() => router.back()}>
-            <MaterialIcons name="close" size={28} color={colors.neutral[400]} />
+            <MaterialIcons name="close" size={28} color={colors.neutral.gray400} />
           </Pressable>
 
           <View style={styles.permissionContent}>

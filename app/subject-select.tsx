@@ -2,15 +2,8 @@ import { View, Text, StyleSheet, Pressable, Image, ScrollView, Alert } from 'rea
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { colors } from '@/constants/colors';
+import { DEFAULT_SUBJECTS } from '@/src/constants';
 import { useState } from 'react';
-
-const SUBJECTS = [
-  { id: 'math', name: '수학', icon: '📐', color: colors.primary[500] },
-  { id: 'physics', name: '물리', icon: '⚛️', color: '#FF6B6B' },
-  { id: 'chemistry', name: '화학', icon: '🧪', color: '#4ECDC4' },
-  { id: 'english', name: '영어', icon: '📚', color: '#95E1D3' },
-  { id: 'korean', name: '국어', icon: '✏️', color: '#F38181' },
-];
 
 export default function SubjectSelectScreen() {
   const router = useRouter();
@@ -85,7 +78,7 @@ export default function SubjectSelectScreen() {
           <Text style={styles.sectionSubtitle}>촬영한 내용에 해당하는 과목을 선택하세요</Text>
 
           <View style={styles.subjectGrid}>
-            {SUBJECTS.map((subject) => {
+            {DEFAULT_SUBJECTS.map((subject) => {
               const isSelected = selectedSubject === subject.id;
               return (
                 <Pressable
