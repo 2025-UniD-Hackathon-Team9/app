@@ -10,6 +10,8 @@ import type { Subject } from '@/src/types';
 interface SubjectSelectorProps {
   /** 표시할 과목 배열 */
   subjects: Subject[];
+  /** 로딩 상태 */
+  isLoading?: boolean;
 }
 
 /**
@@ -18,6 +20,7 @@ interface SubjectSelectorProps {
  */
 export default function SubjectSelector({
   subjects,
+  isLoading = false,
 }: SubjectSelectorProps) {
   const router = useRouter();
 
@@ -35,34 +38,48 @@ export default function SubjectSelector({
         contentContainerStyle={styles.scrollContent}
         style={styles.scrollView}
       >
-        {subjects.map((subject) => {
-          return (
-            <Pressable
-              key={subject.id}
-              style={({ pressed }) => [
-                styles.subjectCard,
-                { backgroundColor: subject.color },
-                pressed && styles.subjectCardPressed,
-              ]}
-              onPress={() => handleSubjectPress(subject.id)}
-            >
-              <Text style={styles.icon}>{subject.icon}</Text>
-              <Text style={styles.subjectName}>{subject.name}</Text>
-            </Pressable>
-          );
-        })}
+        {isLoading ? (
+          // 스켈레톤 UI
+          <>
+            {[1, 2, 3].map((index) => (
+              <View key={index} style={styles.skeletonCard}>
+                <View style={styles.skeletonIcon} />
+                <View style={styles.skeletonText} />
+              </View>
+            ))}
+          </>
+        ) : (
+          <>
+            {subjects.map((subject) => {
+              return (
+                <Pressable
+                  key={subject.id}
+                  style={({ pressed }) => [
+                    styles.subjectCard,
+                    { backgroundColor: subject.color },
+                    pressed && styles.subjectCardPressed,
+                  ]}
+                  onPress={() => handleSubjectPress(subject.id)}
+                >
+                  <Text style={styles.icon}>{subject.icon}</Text>
+                  <Text style={styles.subjectName}>{subject.name}</Text>
+                </Pressable>
+              );
+            })}
 
-        {/* 과목 추가 버튼 */}
-        <Pressable
-          style={({ pressed }) => [
-            styles.addButton,
-            pressed && styles.addButtonPressed,
-          ]}
-          onPress={() => router.push('/add-subject')}
-        >
-          <Text style={styles.addIcon}>+</Text>
-          <Text style={styles.addText}>추가</Text>
-        </Pressable>
+            {/* 과목 추가 버튼 */}
+            <Pressable
+              style={({ pressed }) => [
+                styles.addButton,
+                pressed && styles.addButtonPressed,
+              ]}
+              onPress={() => router.push('/add-subject')}
+            >
+              <Text style={styles.addIcon}>+</Text>
+              <Text style={styles.addText}>추가</Text>
+            </Pressable>
+          </>
+        )}
       </ScrollView>
     </View>
   );
@@ -140,5 +157,27 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: colors.text.secondary,
     letterSpacing: -0.3,
+  },
+  skeletonCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderRadius: 16,
+    minWidth: 130,
+    backgroundColor: colors.neutral.gray100,
+  },
+  skeletonIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    backgroundColor: colors.neutral.gray200,
+  },
+  skeletonText: {
+    width: 60,
+    height: 16,
+    borderRadius: 4,
+    backgroundColor: colors.neutral.gray200,
   },
 });

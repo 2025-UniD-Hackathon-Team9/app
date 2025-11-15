@@ -6,7 +6,25 @@ import { colors } from '@/constants/colors';
 import type { Subject } from '@/src/types';
 
 /**
- * 애플리케이션에서 사용 가능한 기본 과목
+ * 과목 아이콘/색상 매핑용 상수
+ * 백엔드에서 받은 과목 인덱스에 따라 순환하며 할당됨
+ */
+export const SUBJECT_THEME_PALETTE = [
+  { icon: '📐', color: colors.primary[500] },
+  { icon: '⚛️', color: '#FF6B6B' },
+  { icon: '🧪', color: '#4ECDC4' },
+  { icon: '📚', color: '#95E1D3' },
+  { icon: '✏️', color: '#F38181' },
+  { icon: '🎨', color: '#FF9F43' },
+  { icon: '🎵', color: '#54A0FF' },
+  { icon: '⚽', color: '#5F27CD' },
+  { icon: '🌍', color: '#00D2D3' },
+  { icon: '💻', color: '#1DD1A1' },
+];
+
+/**
+ * @deprecated DEFAULT_SUBJECTS는 더 이상 사용되지 않습니다. SUBJECT_THEME_PALETTE를 사용하세요.
+ * 하위 호환성을 위해 유지됩니다.
  */
 export const DEFAULT_SUBJECTS: Subject[] = [
   { id: 'math', name: '수학', icon: '📐', color: colors.primary[500] },

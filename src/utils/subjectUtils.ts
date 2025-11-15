@@ -3,29 +3,6 @@
  */
 
 import type { Subject } from '@/src/types';
-import { DEFAULT_SUBJECTS } from '@/src/constants';
-
-/**
- * ID로 과목 정보를 가져옵니다
- * @param subjectId - 조회할 과목 ID
- * @param subjects - 과목 배열 (기본값: DEFAULT_SUBJECTS)
- * @returns 과목 객체 또는 찾지 못한 경우 undefined
- */
-export function getSubjectById(
-  subjectId: string,
-  subjects: Subject[] = DEFAULT_SUBJECTS
-): Subject | undefined {
-  return subjects.find((subject) => subject.id === subjectId);
-}
-
-/**
- * 빠른 접근을 위한 과목 정보 조회 맵을 생성합니다
- * @param subjects - 과목 배열
- * @returns 과목 ID를 키로 하는 과목 객체 맵
- */
-export function createSubjectMap(subjects: Subject[]): Map<string, Subject> {
-  return new Map(subjects.map((subject) => [subject.id, subject]));
-}
 
 /**
  * 시각화를 위해 불투명도가 적용된 활동 색상을 가져옵니다

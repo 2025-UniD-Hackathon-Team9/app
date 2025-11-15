@@ -2,17 +2,51 @@ import { View, Text, StyleSheet, Pressable, Image, ScrollView, Alert } from 'rea
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { colors } from '@/constants/colors';
-import { DEFAULT_SUBJECTS } from '@/src/constants';
-import { useState } from 'react';
+import { SUBJECT_THEME_PALETTE } from '@/src/constants';
+import { useState, useEffect } from 'react';
+import { useAuth } from '@/src/contexts/AuthContext';
+import { getCourses } from '@/src/api/courses';
+import { processDocument } from '@/src/api/documents';
+import type { Subject } from '@/src/types';
 
 export default function SubjectSelectScreen() {
   const router = useRouter();
+  const { user } = useAuth();
   const { photoUri } = useLocalSearchParams<{ photoUri: string }>();
   const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [isLoadingSubjects, setIsLoadingSubjects] = useState(true);
+
+  useEffect(() => {
+    loadCourses();
+  }, [user]);
+
+  const loadCourses = async () => {
+    if (!user) return;
+
+    setIsLoadingSubjects(true);
+    try {
+      const courses = await getCourses(user.user_id);
+
+      const convertedSubjects: Subject[] = courses.map((course, index) => ({
+        id: course.id.toString(),
+        name: course.title,
+        icon: SUBJECT_THEME_PALETTE[index % SUBJECT_THEME_PALETTE.length]?.icon || '📚',
+        color: SUBJECT_THEME_PALETTE[index % SUBJECT_THEME_PALETTE.length]?.color || '#7C3AED',
+      }));
+
+      setSubjects(convertedSubjects);
+    } catch (error) {
+      console.error('Failed to load courses:', error);
+      Alert.alert('오류', '과목을 불러오는데 실패했습니다.');
+    } finally {
+      setIsLoadingSubjects(false);
+    }
+  };
 
   const handleUpload = async () => {
-    if (!selectedSubject) {
+    if (!selectedSubject || !user || !photoUri) {
       Alert.alert('과목 선택', '과목을 선택해주세요.');
       return;
     }
@@ -20,24 +54,28 @@ export default function SubjectSelectScreen() {
     setIsUploading(true);
 
     try {
-      // TODO: 백엔드로 전송
-      console.log('Uploading to backend:', {
-        photoUri,
-        subject: selectedSubject,
-      });
+      // 이미지 URI를 Blob으로 변환
+      const response = await fetch(photoUri);
+      const blob = await response.blob();
 
-      // 임시로 성공 처리
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // 백엔드로 전송
+      const result = await processDocument(
+        blob,
+        user.user_id,
+        parseInt(selectedSubject)
+      );
 
       Alert.alert(
         '업로드 완료',
-        '사진이 성공적으로 업로드되었습니다.',
+        `문제가 생성되었습니다.\n문제 수: ${result.questionCount}개`,
         [
           {
             text: '확인',
             onPress: () => {
               router.back(); // subject-select 모달 닫기
               router.back(); // camera 모달 닫기
+              // 문제 페이지로 이동
+              router.push(`/subject/${selectedSubject}/problem?sessionId=${result.sessionId}`);
             },
           },
         ]
@@ -77,35 +115,46 @@ export default function SubjectSelectScreen() {
           <Text style={styles.sectionTitle}>어떤 과목인가요?</Text>
           <Text style={styles.sectionSubtitle}>촬영한 내용에 해당하는 과목을 선택하세요</Text>
 
-          <View style={styles.subjectGrid}>
-            {DEFAULT_SUBJECTS.map((subject) => {
-              const isSelected = selectedSubject === subject.id;
-              return (
-                <Pressable
-                  key={subject.id}
-                  style={[
-                    styles.subjectCard,
-                    isSelected && {
-                      borderColor: subject.color,
-                      borderWidth: 3,
-                      backgroundColor: `${subject.color}10`,
-                    },
-                  ]}
-                  onPress={() => setSelectedSubject(subject.id)}
-                >
-                  <View style={[styles.subjectIconContainer, { backgroundColor: subject.color }]}>
-                    <Text style={styles.subjectIcon}>{subject.icon}</Text>
-                  </View>
-                  <Text style={styles.subjectName}>{subject.name}</Text>
-                  {isSelected && (
-                    <View style={[styles.checkMark, { backgroundColor: subject.color }]}>
-                      <MaterialIcons name="check" size={16} color={colors.neutral.white} />
+          {isLoadingSubjects ? (
+            <View style={styles.loadingContainer}>
+              <Text style={styles.loadingText}>과목 불러오는 중...</Text>
+            </View>
+          ) : subjects.length === 0 ? (
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>등록된 과목이 없습니다.</Text>
+              <Text style={styles.emptySubtext}>홈 화면에서 과목을 추가해주세요.</Text>
+            </View>
+          ) : (
+            <View style={styles.subjectGrid}>
+              {subjects.map((subject) => {
+                const isSelected = selectedSubject === subject.id;
+                return (
+                  <Pressable
+                    key={subject.id}
+                    style={[
+                      styles.subjectCard,
+                      isSelected && {
+                        borderColor: subject.color,
+                        borderWidth: 3,
+                        backgroundColor: `${subject.color}10`,
+                      },
+                    ]}
+                    onPress={() => setSelectedSubject(subject.id)}
+                  >
+                    <View style={[styles.subjectIconContainer, { backgroundColor: subject.color }]}>
+                      <Text style={styles.subjectIcon}>{subject.icon}</Text>
                     </View>
-                  )}
-                </Pressable>
-              );
-            })}
-          </View>
+                    <Text style={styles.subjectName}>{subject.name}</Text>
+                    {isSelected && (
+                      <View style={[styles.checkMark, { backgroundColor: subject.color }]}>
+                        <MaterialIcons name="check" size={16} color={colors.neutral.white} />
+                      </View>
+                    )}
+                  </Pressable>
+                );
+              })}
+            </View>
+          )}
         </View>
       </ScrollView>
 
@@ -260,5 +309,27 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     color: colors.neutral.white,
+  },
+  loadingContainer: {
+    paddingVertical: 40,
+    alignItems: 'center',
+  },
+  loadingText: {
+    fontSize: 16,
+    color: colors.text.secondary,
+  },
+  emptyContainer: {
+    paddingVertical: 40,
+    alignItems: 'center',
+  },
+  emptyText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text.primary,
+    marginBottom: 8,
+  },
+  emptySubtext: {
+    fontSize: 14,
+    color: colors.text.secondary,
   },
 });

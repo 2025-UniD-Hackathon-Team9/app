@@ -4,7 +4,7 @@
  * 에러 처리와 타입 안전성을 갖춘 모든 API 요청을 위한 중앙화된 HTTP 클라이언트입니다.
  */
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000';
+const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8080';
 
 /**
  * API 에러를 위한 커스텀 에러 클래스

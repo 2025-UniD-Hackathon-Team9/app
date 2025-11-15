@@ -3,32 +3,160 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { colors } from "@/constants/colors";
-import { DEFAULT_SUBJECTS } from '@/src/constants';
+import { SUBJECT_THEME_PALETTE } from '@/src/constants';
 import type { StudyRecord } from '@/src/types';
-import { getSubjectById, getActivityColor } from '@/src/utils';
+import { getActivityColor } from '@/src/utils';
 import { getDayOfWeek, getActivityLevel } from '@/src/utils';
-
-// 샘플 활동 데이터 (최근 7일)
-const SAMPLE_ACTIVITY_DATA: StudyRecord[] = [
-  { date: '2025-11-09', sessionsCompleted: 0 },
-  { date: '2025-11-10', sessionsCompleted: 6 },
-  { date: '2025-11-11', sessionsCompleted: 0 },
-  { date: '2025-11-12', sessionsCompleted: 3 },
-  { date: '2025-11-13', sessionsCompleted: 5 },
-  { date: '2025-11-14', sessionsCompleted: 0 },
-  { date: '2025-11-15', sessionsCompleted: 2 },
-];
+import { useState, useEffect } from 'react';
+import { getCourses } from '@/src/api/courses';
+import { useAuth } from '@/src/contexts/AuthContext';
+import { getSessionHistory, type SessionHistory } from '@/src/api/sessions';
 
 export default function SubjectScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { user } = useAuth();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const subject = getSubjectById(id) || { 
+  const [subject, setSubject] = useState<{ id: string; name: string; icon: string; color: string }>({
     id: id,
-    name: '과목', 
-    icon: '📖', 
-    color: colors.primary[500] 
+    name: '과목',
+    icon: '📖',
+    color: colors.primary[500]
+  });
+  const [isLoading, setIsLoading] = useState(true);
+  const [sessions, setSessions] = useState<SessionHistory[]>([]);
+
+  useEffect(() => {
+    if (user) {
+      loadCourse();
+      loadSessions();
+    }
+  }, [user, id]);
+
+  const loadCourse = async () => {
+    if (!user) return;
+
+    setIsLoading(true);
+    try {
+      const courses = await getCourses(user.user_id);
+      const course = courses.find(c => c.id.toString() === id);
+
+      if (course) {
+        // 백엔드 Course 데이터를 Subject 타입으로 변환
+        const courseIndex = courses.findIndex(c => c.id === course.id);
+        setSubject({
+          id: course.id.toString(),
+          name: course.title,
+          icon: SUBJECT_THEME_PALETTE[courseIndex % SUBJECT_THEME_PALETTE.length]?.icon || '📚',
+          color: SUBJECT_THEME_PALETTE[courseIndex % SUBJECT_THEME_PALETTE.length]?.color || '#7C3AED',
+        });
+      }
+    } catch (error) {
+      console.error('Failed to load course:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  const loadSessions = async () => {
+    if (!user) return;
+
+    try {
+      const sessionHistory = await getSessionHistory(user.user_id, parseInt(id));
+      setSessions(sessionHistory);
+    } catch (error) {
+      console.error('Failed to load sessions:', error);
+    }
+  };
+
+  // 퀴즈 통계 계산
+  const completedSessions = sessions.filter(s => s.status === 'Completed');
+  const totalQuizzes = completedSessions.length;
+  const averageScore = totalQuizzes > 0
+    ? Math.round(completedSessions.reduce((sum, s) => sum + (s.score || 0), 0) / totalQuizzes)
+    : 0;
+
+  // 최근 7일 활동 데이터 계산
+  const getRecentActivityData = (): StudyRecord[] => {
+    const today = new Date();
+    const recentDays: StudyRecord[] = [];
+
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(date.getDate() - i);
+      const dateString = date.toISOString().split('T')[0];
+
+      // 해당 날짜에 완료된 세션 개수 계산
+      const sessionsOnDate = sessions.filter(s => {
+        const sessionDate = new Date(s.created_at).toISOString().split('T')[0];
+        return sessionDate === dateString && s.status === 'Completed';
+      }).length;
+
+      recentDays.push({
+        date: dateString,
+        sessionsCompleted: sessionsOnDate,
+      });
+    }
+
+    return recentDays;
+  };
+
+  const activityData = getRecentActivityData();
+
+  if (isLoading) {
+    return (
+      <ScrollView style={styles.container}>
+        <StatusBar barStyle="dark-content" />
+        <View style={[styles.header, { paddingTop: insets.top + 20 }]}>
+          {/* 뒤로가기 버튼 */}
+          <Pressable style={styles.backButton} onPress={() => router.back()}>
+            <MaterialIcons name="arrow-back" size={24} color={colors.text.primary} />
+          </Pressable>
+
+          {/* 타이틀 섹션 스켈레톤 */}
+          <View style={styles.titleSection}>
+            <View style={styles.skeletonIconContainer} />
+            <View style={styles.titleTextContainer}>
+              <View style={styles.skeletonTitle} />
+            </View>
+          </View>
+
+          {/* 주간 활동 그래프 스켈레톤 */}
+          <View style={styles.activitySection}>
+            <View style={styles.skeletonSectionTitle} />
+            <View style={styles.activityGrid}>
+              {[1, 2, 3, 4, 5, 6, 7].map((index) => (
+                <View key={index} style={styles.activityDayContainer}>
+                  <View style={styles.skeletonActivityDay} />
+                  <View style={styles.skeletonDayLabel} />
+                </View>
+              ))}
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.content}>
+          <View style={styles.section}>
+            <View style={styles.skeletonSectionTitle} />
+            <View style={styles.skeletonCard} />
+          </View>
+
+          <View style={styles.section}>
+            <View style={styles.skeletonSectionTitle} />
+            <View style={styles.statsGrid}>
+              <View style={styles.skeletonStatCard} />
+              <View style={styles.skeletonStatCard} />
+            </View>
+          </View>
+
+          <View style={styles.section}>
+            <View style={styles.skeletonSectionTitle} />
+            <View style={styles.skeletonCard} />
+          </View>
+        </View>
+      </ScrollView>
+    );
+  }
 
   return (
     <ScrollView style={styles.container}>
@@ -53,9 +181,9 @@ export default function SubjectScreen() {
         <View style={styles.activitySection}>
           <Text style={styles.activitySectionTitle}>최근 7일 활동</Text>
           <View style={styles.activityGrid}>
-            {SAMPLE_ACTIVITY_DATA.map((day, index) => {
+            {activityData.map((day, index) => {
               const level = getActivityLevel(day.sessionsCompleted);
-              const isToday = index === SAMPLE_ACTIVITY_DATA.length - 1;
+              const isToday = index === activityData.length - 1;
               return (
                 <View key={day.date} style={styles.activityDayContainer}>
                   <View
@@ -90,22 +218,57 @@ export default function SubjectScreen() {
       <View style={styles.content}>
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>최근 학습 내용</Text>
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyText}>아직 학습한 내용이 없습니다</Text>
-            <Text style={styles.emptySubText}>PDF를 업로드하여 학습을 시작하세요</Text>
-          </View>
+          {sessions.length > 0 ? (
+            <View style={styles.sessionList}>
+              {sessions.map((session) => (
+                <Pressable
+                  key={session.id}
+                  style={({ pressed }) => [
+                    styles.sessionCard,
+                    pressed && { opacity: 0.7 },
+                  ]}
+                  onPress={() => router.push(`/subject/${id}/problem?sessionId=${session.id}`)}
+                >
+                  <View style={styles.sessionHeader}>
+                    <View style={[styles.sessionStatusBadge, session.status === 'Completed' && { backgroundColor: colors.primary[100] }]}>
+                      <Text style={[styles.sessionStatusText, session.status === 'Completed' && { color: colors.primary[500] }]}>
+                        {session.status === 'Completed' ? '완료' : session.status === 'InProgress' ? '진행중' : '미시작'}
+                      </Text>
+                    </View>
+                    {session.score !== undefined && (
+                      <Text style={[styles.sessionScore, { color: subject.color }]}>
+                        {session.score}점
+                      </Text>
+                    )}
+                  </View>
+                  <Text style={styles.sessionDate}>
+                    {new Date(session.created_at).toLocaleDateString('ko-KR', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                    })}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+          ) : (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyText}>아직 학습한 내용이 없습니다</Text>
+              <Text style={styles.emptySubText}>PDF를 업로드하여 학습을 시작하세요</Text>
+            </View>
+          )}
         </View>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>퀴즈 통계</Text>
           <View style={styles.statsGrid}>
             <View style={styles.statCard}>
-              <Text style={[styles.statValue, { color: subject.color }]}>0</Text>
+              <Text style={[styles.statValue, { color: subject.color }]}>{totalQuizzes}</Text>
               <Text style={styles.statLabel}>총 퀴즈</Text>
             </View>
             <View style={styles.statCard}>
-              <Text style={[styles.statValue, { color: subject.color }]}>0%</Text>
-              <Text style={styles.statLabel}>정답률</Text>
+              <Text style={[styles.statValue, { color: subject.color }]}>{averageScore}점</Text>
+              <Text style={styles.statLabel}>평균 점수</Text>
             </View>
           </View>
         </View>
@@ -119,15 +282,32 @@ export default function SubjectScreen() {
 
         <View style={styles.section}>
           <Pressable
-            onPress={() => router.push(`/subject/${id}/problem`)}
+            onPress={() => {
+              if (sessions.length > 0) {
+                router.push(`/subject/${id}/problem?sessionId=${sessions[0].id}`);
+              }
+            }}
+            disabled={sessions.length === 0}
             style={({ pressed }) => [
               styles.testButton,
-              { backgroundColor: subject.color },
-              pressed && { opacity: 0.8 },
+              sessions.length === 0
+                ? styles.testButtonDisabled
+                : { backgroundColor: subject.color },
+              pressed && sessions.length > 0 && { opacity: 0.8 },
             ]}
           >
-            <Text style={styles.testButtonText}>문제 테스트</Text>
+            <Text style={[
+              styles.testButtonText,
+              sessions.length === 0 && { color: colors.text.disabled }
+            ]}>
+              문제 테스트
+            </Text>
           </Pressable>
+          {sessions.length === 0 && (
+            <Text style={styles.testButtonHint}>
+              PDF를 업로드하면 문제를 풀 수 있습니다
+            </Text>
+          )}
         </View>
       </View>
     </ScrollView>
@@ -291,9 +471,103 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 4,
   },
+  testButtonDisabled: {
+    backgroundColor: colors.neutral.gray200,
+    shadowOpacity: 0,
+  },
   testButtonText: {
     fontSize: 18,
     fontWeight: 'bold',
     color: colors.neutral.black,
+  },
+  testButtonHint: {
+    fontSize: 14,
+    color: colors.text.secondary,
+    textAlign: 'center',
+    marginTop: 12,
+  },
+  // 스켈레톤 UI 스타일
+  skeletonIconContainer: {
+    width: 64,
+    height: 64,
+    borderRadius: 20,
+    backgroundColor: colors.neutral.gray200,
+  },
+  skeletonTitle: {
+    width: 120,
+    height: 28,
+    borderRadius: 8,
+    backgroundColor: colors.neutral.gray200,
+  },
+  skeletonSectionTitle: {
+    width: 100,
+    height: 22,
+    borderRadius: 6,
+    backgroundColor: colors.neutral.gray200,
+    marginBottom: 16,
+  },
+  skeletonActivityDay: {
+    width: '100%',
+    aspectRatio: 1,
+    borderRadius: 12,
+    backgroundColor: colors.neutral.gray200,
+  },
+  skeletonDayLabel: {
+    width: 20,
+    height: 12,
+    borderRadius: 4,
+    backgroundColor: colors.neutral.gray200,
+  },
+  skeletonCard: {
+    backgroundColor: colors.neutral.gray100,
+    borderRadius: 20,
+    padding: 40,
+    height: 120,
+  },
+  skeletonStatCard: {
+    flex: 1,
+    backgroundColor: colors.neutral.gray100,
+    borderRadius: 20,
+    padding: 24,
+    height: 120,
+  },
+  // 세션 목록 스타일
+  sessionList: {
+    gap: 12,
+  },
+  sessionCard: {
+    backgroundColor: colors.neutral.white,
+    borderRadius: 16,
+    padding: 20,
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  sessionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  sessionStatusBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    backgroundColor: colors.neutral.gray100,
+  },
+  sessionStatusText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.text.secondary,
+  },
+  sessionScore: {
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  sessionDate: {
+    fontSize: 14,
+    color: colors.text.secondary,
   },
 });

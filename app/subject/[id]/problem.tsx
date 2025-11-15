@@ -1,84 +1,181 @@
-import { View, Text, StyleSheet, ScrollView, Pressable, Animated, StatusBar } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, Animated, StatusBar, Alert, TextInput } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '@/constants/colors';
-import { useState } from 'react';
-
-const SAMPLE_PROBLEMS = [
-  {
-    id: 1,
-    question: '다음 중 가장 옳은 것은?',
-    options: ['보기 1', '보기 2', '보기 3', '보기 4'],
-    correct: 0,
-  },
-  {
-    id: 2,
-    question: '다음을 계산하시오',
-    options: ['답 1', '답 2', '답 3', '답 4'],
-    correct: 1,
-  },
-  {
-    id: 3,
-    question: '올바른 발음은?',
-    options: ['선택지 1', '선택지 2', '선택지 3', '선택지 4'],
-    correct: 2,
-  },
-];
-
-const SUBJECT_INFO: { [key: string]: { name: string; icon: string; color: string } } = {
-  math: { name: '수학', icon: '📐', color: colors.primary[500] },
-  physics: { name: '물리', icon: '⚛️', color: '#FF6B6B' },
-  chemistry: { name: '화학', icon: '🧪', color: '#4ECDC4' },
-  english: { name: '영어', icon: '📚', color: '#95E1D3' },
-  korean: { name: '국어', icon: '✏️', color: '#F38181' },
-};
+import { useState, useEffect } from 'react';
+import { getSession, submitSession, type SessionQuestion, type SessionAnswer } from '@/src/api/sessions';
+import { getCourses } from '@/src/api/courses';
+import { useAuth } from '@/src/contexts/AuthContext';
+import { SUBJECT_THEME_PALETTE } from '@/src/constants';
 
 export default function ProblemScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { id } = useLocalSearchParams<{ id:string }>();
+  const { user } = useAuth();
+  const { id, sessionId } = useLocalSearchParams<{ id: string; sessionId?: string }>();
 
   if (!id) {
     return null;
   }
 
-  const subject = SUBJECT_INFO[id] || { name: '과목', icon: '📖', color: colors.primary[500] };
-
+  const [subject, setSubject] = useState<{ name: string; icon: string; color: string }>({ name: '과목', icon: '📖', color: colors.primary[500] });
+  const [problems, setProblems] = useState<SessionQuestion[]>([]);
+  const [answers, setAnswers] = useState<Map<number, string>>(new Map());
   const [currentProblemIndex, setCurrentProblemIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
+  const [textAnswer, setTextAnswer] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(true);
   const [showResult, setShowResult] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
-
-  const currentProblem = SAMPLE_PROBLEMS[currentProblemIndex];
-  const progress = (currentProblemIndex + 1) / SAMPLE_PROBLEMS.length;
-
-  const handleSelectOption = (index: number) => {
-    if (!showResult) {
-      setSelectedOption(index);
-    }
-  };
-
-  const handleSubmit = () => {
-    if (selectedOption === null) return;
-
-    const correct = selectedOption === currentProblem.correct;
-    setIsCorrect(correct);
-    setShowResult(true);
-  };
-
-  const handleNext = () => {
-    if (currentProblemIndex < SAMPLE_PROBLEMS.length - 1) {
-      setCurrentProblemIndex(currentProblemIndex + 1);
-      setSelectedOption(null);
-      setShowResult(false);
-    } else {
-      router.back();
-    }
-  };
+  const [correctAnswer, setCorrectAnswer] = useState<string>('');
 
   const handleQuit = () => {
     router.back();
+  };
+
+  useEffect(() => {
+    loadData();
+  }, [id, sessionId, user]);
+
+  const loadData = async () => {
+    if (!user) return;
+
+    try {
+      // 과목 정보 로드
+      const courses = await getCourses(user.user_id);
+      const course = courses.find(c => c.id.toString() === id);
+      if (course) {
+        const courseIndex = courses.findIndex(c => c.id === course.id);
+        setSubject({
+          name: course.title,
+          icon: SUBJECT_THEME_PALETTE[courseIndex % SUBJECT_THEME_PALETTE.length]?.icon || '📖',
+          color: SUBJECT_THEME_PALETTE[courseIndex % SUBJECT_THEME_PALETTE.length]?.color || colors.primary[500],
+        });
+      }
+
+      // 세션 ID가 있으면 세션 문제 로드
+      if (sessionId) {
+        const sessionData = await getSession(parseInt(sessionId));
+        setProblems(sessionData.questions);
+      } else {
+        // 세션 ID가 없으면 에러
+        Alert.alert('오류', '세션 ID가 필요합니다.');
+        router.back();
+        return;
+      }
+    } catch (error) {
+      console.error('Failed to load session:', error);
+      Alert.alert('오류', '문제를 불러오는데 실패했습니다.');
+      router.back();
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <Text style={styles.problemCounter}>로딩 중...</Text>
+      </View>
+    );
+  }
+
+  // 세션에 문제가 없을 때
+  if (sessionId && problems.length === 0) {
+    return (
+      <View style={styles.container}>
+        <StatusBar barStyle="dark-content" />
+        <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
+          <View style={styles.headerTop}>
+            <Pressable onPress={handleQuit} style={styles.quitButton}>
+              <MaterialIcons name="close" size={24} color={colors.text.primary} />
+            </Pressable>
+            <Text style={styles.problemCounter}>문제 없음</Text>
+            <View style={styles.placeholder} />
+          </View>
+        </View>
+        <View style={[styles.emptyContainer, { paddingTop: insets.top }]}>
+          <Text style={styles.emptyIcon}>📝</Text>
+          <Text style={styles.emptyTitle}>문제가 없습니다</Text>
+          <Text style={styles.emptyDescription}>
+            이 세션에 문제가 아직 생성되지 않았습니다.{'\n'}
+            PDF를 업로드하여 문제를 생성하세요.
+          </Text>
+          <Pressable
+            onPress={handleQuit}
+            style={styles.emptyButton}
+          >
+            <Text style={styles.emptyButtonText}>돌아가기</Text>
+          </Pressable>
+        </View>
+      </View>
+    );
+  }
+
+  const currentProblem = problems[currentProblemIndex];
+  const progress = (currentProblemIndex + 1) / problems.length;
+
+  const handleSelectOption = (index: number) => {
+    setSelectedOption(index);
+  };
+
+  const handleSubmit = async () => {
+    if (!sessionId || showResult) return;
+
+    // 답안 결정: 객관식이면 선택한 옵션, 그 외에는 텍스트 답변
+    let userAnswer = '';
+    if (currentProblem.type === '객관식' && selectedOption !== null) {
+      userAnswer = currentProblem.options?.[selectedOption] || '';
+    } else if (currentProblem.type === 'OX') {
+      userAnswer = textAnswer; // 'O' 또는 'X'
+    } else if (currentProblem.type === '단답식') {
+      userAnswer = textAnswer;
+    }
+
+    if (!userAnswer) return;
+
+    // 답안 저장
+    const newAnswers = new Map(answers);
+    newAnswers.set(currentProblem.id, userAnswer);
+    setAnswers(newAnswers);
+
+    // 현재 문제만 제출하여 정답 확인
+    try {
+      const singleAnswer: SessionAnswer[] = [{
+        session_question_id: currentProblem.id,
+        user_answer: userAnswer,
+      }];
+
+      const result = await submitSession(parseInt(sessionId), singleAnswer);
+      const currentResult = result.results[0];
+
+      // 결과 표시
+      setIsCorrect(currentResult.correct);
+      setCorrectAnswer(currentResult.real_answer || '');
+      setShowResult(true);
+    } catch (error) {
+      console.error('Failed to submit answer:', error);
+      Alert.alert('오류', '답안 제출에 실패했습니다.');
+    }
+  };
+
+  const handleContinue = () => {
+    // 다음 문제로 이동 또는 완료
+    if (currentProblemIndex === problems.length - 1) {
+      Alert.alert(
+        '완료',
+        '모든 문제를 풀었습니다!',
+        [{ text: '확인', onPress: () => router.back() }]
+      );
+    } else {
+      setCurrentProblemIndex(currentProblemIndex + 1);
+      setSelectedOption(null);
+      setTextAnswer('');
+      setShowResult(false);
+      setIsCorrect(false);
+      setCorrectAnswer('');
+    }
   };
 
   return (
@@ -92,7 +189,7 @@ export default function ProblemScreen() {
             <MaterialIcons name="close" size={24} color={colors.text.primary} />
           </Pressable>
           <Text style={styles.problemCounter}>
-            {currentProblemIndex + 1} / {SAMPLE_PROBLEMS.length}
+            {currentProblemIndex + 1} / {problems.length}
           </Text>
           <View style={styles.placeholder} />
         </View>
@@ -121,27 +218,28 @@ export default function ProblemScreen() {
             <Text style={styles.subjectIcon}>{subject.icon}</Text>
             <Text style={styles.subjectName}>{subject.name}</Text>
           </View>
-          <Text style={styles.question}>{currentProblem.question}</Text>
+          <Text style={styles.question}>{currentProblem.question_text}</Text>
         </View>
 
-        {/* Options Section */}
+        {/* Answer Section */}
         <View style={styles.optionsSection}>
-          {currentProblem.options.map((option, index) => {
+          {/* 객관식 */}
+          {currentProblem.type === '객관식' && currentProblem.options?.map((option, index) => {
             const isSelected = selectedOption === index;
-            const isCorrectAnswer = index === currentProblem.correct;
-            const showCorrect = showResult && isCorrectAnswer;
-            const showWrong = showResult && isSelected && !isCorrectAnswer;
+            const isCorrectOption = showResult && !isCorrect && option === correctAnswer;
+            const isWrongOption = showResult && isSelected && !isCorrect;
 
             return (
               <Pressable
                 key={index}
-                onPress={() => handleSelectOption(index)}
+                onPress={() => !showResult && handleSelectOption(index)}
                 disabled={showResult}
                 style={({ pressed }) => [
                   styles.optionButton,
-                  isSelected && !showResult && { borderColor: subject.color },
-                  showCorrect && styles.optionButtonCorrect,
-                  showWrong && styles.optionButtonWrong,
+                  isSelected && !showResult && { borderColor: subject.color, borderWidth: 3 },
+                  showResult && isSelected && isCorrect && styles.optionButtonCorrect,
+                  isWrongOption && styles.optionButtonWrong,
+                  isCorrectOption && styles.optionButtonCorrect,
                   !showResult && pressed && { opacity: 0.7 },
                 ]}
               >
@@ -149,32 +247,114 @@ export default function ProblemScreen() {
                   style={[
                     styles.optionText,
                     isSelected && !showResult && { color: subject.color },
-                    showCorrect && { color: '#4CAF50' },
-                    showWrong && { color: '#FF5252' },
                   ]}
                 >
                   {option}
                 </Text>
-                {showCorrect && (
+                {showResult && isCorrectOption && (
                   <MaterialIcons name="check-circle" size={24} color="#4CAF50" />
                 )}
-                {showWrong && (
+                {isWrongOption && (
                   <MaterialIcons name="cancel" size={24} color="#FF5252" />
                 )}
               </Pressable>
             );
           })}
+
+          {/* OX 문제 */}
+          {currentProblem.type === 'OX' && (
+            <View style={styles.oxContainer}>
+              <Pressable
+                onPress={() => !showResult && setTextAnswer('O')}
+                disabled={showResult}
+                style={({ pressed }) => [
+                  styles.oxButton,
+                  textAnswer === 'O' && !showResult && { borderColor: subject.color, borderWidth: 3, backgroundColor: `${subject.color}10` },
+                  showResult && textAnswer === 'O' && isCorrect && styles.optionButtonCorrect,
+                  showResult && textAnswer === 'O' && !isCorrect && styles.optionButtonWrong,
+                  showResult && correctAnswer === 'O' && textAnswer !== 'O' && styles.optionButtonCorrect,
+                  !showResult && pressed && { opacity: 0.7 },
+                ]}
+              >
+                <Text style={[
+                  styles.oxText,
+                  textAnswer === 'O' && !showResult && { color: subject.color, fontWeight: 'bold' },
+                ]}>O</Text>
+                {showResult && correctAnswer === 'O' && (
+                  <MaterialIcons name="check-circle" size={24} color="#4CAF50" style={styles.oxIcon} />
+                )}
+                {showResult && textAnswer === 'O' && !isCorrect && (
+                  <MaterialIcons name="cancel" size={24} color="#FF5252" style={styles.oxIcon} />
+                )}
+              </Pressable>
+              <Pressable
+                onPress={() => !showResult && setTextAnswer('X')}
+                disabled={showResult}
+                style={({ pressed }) => [
+                  styles.oxButton,
+                  textAnswer === 'X' && !showResult && { borderColor: subject.color, borderWidth: 3, backgroundColor: `${subject.color}10` },
+                  showResult && textAnswer === 'X' && isCorrect && styles.optionButtonCorrect,
+                  showResult && textAnswer === 'X' && !isCorrect && styles.optionButtonWrong,
+                  showResult && correctAnswer === 'X' && textAnswer !== 'X' && styles.optionButtonCorrect,
+                  !showResult && pressed && { opacity: 0.7 },
+                ]}
+              >
+                <Text style={[
+                  styles.oxText,
+                  textAnswer === 'X' && !showResult && { color: subject.color, fontWeight: 'bold' },
+                ]}>X</Text>
+                {showResult && correctAnswer === 'X' && (
+                  <MaterialIcons name="check-circle" size={24} color="#4CAF50" style={styles.oxIcon} />
+                )}
+                {showResult && textAnswer === 'X' && !isCorrect && (
+                  <MaterialIcons name="cancel" size={24} color="#FF5252" style={styles.oxIcon} />
+                )}
+              </Pressable>
+            </View>
+          )}
+
+          {/* 단답식 */}
+          {currentProblem.type === '단답식' && (
+            <View style={styles.shortAnswerContainer}>
+              <TextInput
+                style={[
+                  styles.shortAnswerInput,
+                  showResult && isCorrect && styles.shortAnswerCorrect,
+                  showResult && !isCorrect && styles.shortAnswerWrong,
+                ]}
+                placeholder="답을 입력하세요"
+                placeholderTextColor={colors.text.tertiary}
+                value={textAnswer}
+                onChangeText={setTextAnswer}
+                multiline
+                autoFocus
+                editable={!showResult}
+              />
+              {showResult && !isCorrect && correctAnswer && (
+                <View style={styles.correctAnswerBox}>
+                  <Text style={styles.correctAnswerLabel}>정답:</Text>
+                  <Text style={styles.correctAnswerText}>{correctAnswer}</Text>
+                </View>
+              )}
+            </View>
+          )}
         </View>
 
-        {/* Result Feedback */}
+        {/* Result Banner */}
         {showResult && (
-          <View style={[styles.resultBanner, isCorrect ? styles.resultCorrect : styles.resultWrong]}>
-            <Text style={styles.resultEmoji}>{isCorrect ? '🎉' : '💡'}</Text>
+          <View style={[
+            styles.resultBanner,
+            isCorrect ? styles.resultCorrect : styles.resultWrong
+          ]}>
+            <Text style={styles.resultEmoji}>
+              {isCorrect ? '🎉' : '💡'}
+            </Text>
             <Text style={styles.resultText}>
-              {isCorrect ? '정답입니다!' : '틀렸습니다. 다시 확인해보세요.'}
+              {isCorrect ? '정답입니다!' : '아쉽네요! 다음 기회에 도전하세요.'}
             </Text>
           </View>
         )}
+
       </ScrollView>
 
       {/* Bottom Button */}
@@ -182,18 +362,23 @@ export default function ProblemScreen() {
         {!showResult ? (
           <Pressable
             onPress={handleSubmit}
-            disabled={selectedOption === null}
+            disabled={
+              (currentProblem.type === '객관식' && selectedOption === null) ||
+              ((currentProblem.type === 'OX' || currentProblem.type === '단답식') && !textAnswer.trim())
+            }
             style={({ pressed }) => [
               styles.submitButton,
-              selectedOption === null && styles.submitButtonDisabled,
-              pressed && selectedOption !== null && { opacity: 0.85 },
+              ((currentProblem.type === '객관식' && selectedOption === null) ||
+                ((currentProblem.type === 'OX' || currentProblem.type === '단답식') && !textAnswer.trim())) &&
+                styles.submitButtonDisabled,
+              pressed && { opacity: 0.85 },
             ]}
           >
             <Text style={styles.submitButtonText}>확인</Text>
           </Pressable>
         ) : (
           <Pressable
-            onPress={handleNext}
+            onPress={handleContinue}
             style={({ pressed }) => [
               styles.submitButton,
               styles.continueButton,
@@ -201,7 +386,7 @@ export default function ProblemScreen() {
             ]}
           >
             <Text style={styles.submitButtonText}>
-              {currentProblemIndex === SAMPLE_PROBLEMS.length - 1 ? '완료' : '다음'}
+              {currentProblemIndex === problems.length - 1 ? '완료' : '다음 문제'}
             </Text>
           </Pressable>
         )}
@@ -361,5 +546,107 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: 'bold',
     color: colors.neutral.white,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 40,
+  },
+  emptyIcon: {
+    fontSize: 64,
+    marginBottom: 20,
+  },
+  emptyTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: colors.text.primary,
+    marginBottom: 12,
+  },
+  emptyDescription: {
+    fontSize: 16,
+    color: colors.text.secondary,
+    textAlign: 'center',
+    lineHeight: 24,
+    marginBottom: 32,
+  },
+  emptyButton: {
+    backgroundColor: colors.primary[500],
+    paddingVertical: 14,
+    paddingHorizontal: 32,
+    borderRadius: 12,
+  },
+  emptyButtonText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: colors.neutral.white,
+  },
+  oxContainer: {
+    flexDirection: 'row',
+    gap: 16,
+    justifyContent: 'center',
+  },
+  oxButton: {
+    flex: 1,
+    aspectRatio: 1,
+    maxWidth: 150,
+    backgroundColor: colors.neutral.white,
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: colors.neutral.gray200,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  oxText: {
+    fontSize: 48,
+    fontWeight: 'bold',
+    color: colors.text.primary,
+  },
+  shortAnswerContainer: {
+    marginTop: 8,
+  },
+  shortAnswerInput: {
+    backgroundColor: colors.neutral.white,
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: colors.neutral.gray200,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    fontSize: 16,
+    color: colors.text.primary,
+    minHeight: 120,
+    textAlignVertical: 'top',
+  },
+  shortAnswerCorrect: {
+    backgroundColor: '#E8F5E9',
+    borderColor: '#4CAF50',
+  },
+  shortAnswerWrong: {
+    backgroundColor: '#FFEBEE',
+    borderColor: '#FF5252',
+  },
+  correctAnswerBox: {
+    marginTop: 12,
+    padding: 16,
+    backgroundColor: '#E8F5E9',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#4CAF50',
+  },
+  correctAnswerLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#2E7D32',
+    marginBottom: 4,
+  },
+  correctAnswerText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#1B5E20',
+  },
+  oxIcon: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
   },
 });

@@ -52,6 +52,7 @@ export const colors = {
   text: {
     primary: '#191F28',
     secondary: '#4E5968',
+    tertiary: '#8B95A1',
     disabled: '#8B95A1',
     white: '#FFFFFF',
   },

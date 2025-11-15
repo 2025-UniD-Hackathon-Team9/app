@@ -1,22 +1,41 @@
-import { View, Text, StyleSheet, ScrollView, Pressable, TextInput, StatusBar } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, TextInput, StatusBar, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { colors } from '@/constants/colors';
 import { AVAILABLE_SUBJECT_ICONS, AVAILABLE_SUBJECT_COLORS } from '@/src/constants';
 import { useState } from 'react';
+import { createCourse } from '@/src/api/courses';
+import { useAuth } from '@/src/contexts/AuthContext';
 
 export default function AddSubjectScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { user } = useAuth();
   const [subjectName, setSubjectName] = useState('');
   const [selectedIcon, setSelectedIcon] = useState(AVAILABLE_SUBJECT_ICONS[0]);
   const [selectedColor, setSelectedColor] = useState(AVAILABLE_SUBJECT_COLORS[0]);
 
-  const handleSave = () => {
-    // TODO: 과목 저장 로직
-    console.log('Saving subject:', { name: subjectName, icon: selectedIcon, color: selectedColor });
-    router.back();
+  const handleSave = async () => {
+    if (!user) {
+      Alert.alert('오류', '로그인이 필요합니다.');
+      return;
+    }
+
+    try {
+      const result = await createCourse({
+        user_id: user.user_id,
+        title: subjectName,
+      });
+
+      console.log('Course created:', result);
+      Alert.alert('성공', '과목이 추가되었습니다.', [
+        { text: '확인', onPress: () => router.back() }
+      ]);
+    } catch (error) {
+      console.error('Failed to create course:', error);
+      Alert.alert('오류', '과목 추가에 실패했습니다.');
+    }
   };
 
   const canSave = subjectName.trim().length > 0;

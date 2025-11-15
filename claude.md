@@ -29,10 +29,10 @@
 | **Users** | GET | /users/:id | User 정보 조회 | O | ❌ |
 | **Courses** | POST | /courses | 과목 생성 | O | ❌ |
 | **Courses** | GET | /courses?user_id=1 | user_id 기준 과목 목록 조회 | O | ❌ |
-| **Documents** | POST | /documents | PDF 업로드 | ❌ | ❌ |
-| **Documents** | POST | /documents/:id/parse | 문서 파싱 실행 | ❌ | ❌ |
-| **Documents** | GET | /documents?course_id=10 | 과목 내 문서 목록 조회 | ❌ | ❌ |
-| **Sessions** | POST | /sessions | 세션 생성 (문제 자동 생성 포함) | ❌ | ❌ |
+| **Documents** | POST | /api/documents/process | PDF 업로드 | ❌ | ❌ |
+|  |  |  |  |  |  |
+|  |  |  |  |  |  |
+|  |  |  |  |  |  |
 | **Sessions** | GET | /sessions/:id | 세션 문제 조회 | ❌ | ❌ |
 | **Sessions** | POST | /sessions/:id/submit | 세션 전체 제출 및 채점 | ❌ | ❌ |
 | **Sessions** | GET | /sessions?user_id=1&course_id=10 | 세션 기록 조회 | ❌ | ❌ |
@@ -161,7 +161,7 @@ JWT 없이 간단 로그인 → user_id만 반환
 
 # 📌 **3. Documents Domain (PDF 업로드 & 파싱)**
 
-## **POST /documents — PDF 업로드**
+## **POST** /api/documents/process **— PDF 업로드**
 
 (Form-Data)
 
@@ -169,98 +169,21 @@ JWT 없이 간단 로그인 → user_id만 반환
 | --- | --- |
 | file | PDF 파일 |
 | user_id | 1 |
-| course_id | 10 |
+| course_id | 1 |
 
 ### ✔ Response
 
 ```json
 {
-  "document_id": 33,
-  "status": "uploaded",
-  "file_path": "/uploads/xyz.pdf"
+    "documentId": 9,
+    "sessionId": 9,
+    "questionCount": 10
 }
-
-```
-
----
-
-## **POST /documents/:documentId/parse**
-
-문서를 AI로 파싱 → `parsed_json` 저장
-
-`status = parsed`로 변경
-
-### ✔ Response
-
-```json
-{
-  "document_id": 33,
-  "status": "parsed",
-  "parsed_json": {
-    "sections": [
-      {
-        "header": "헤더",
-        "content": ["ㅁㅁㅁㅁㅁ"]
-      }
-    ]
-  }
-}
-
-```
-
----
-
-## **GET /documents?course_id=10**
-
-### ✔ Response
-
-```json
-[
-  {
-    "id": 33,
-    "status": "parsed",
-    "created_at": "2025-01-01"
-  },
-  {
-    "id": 34,
-    "status": "uploaded",
-    "created_at": "2025-01-02"
-  }
-]
-
 ```
 
 ---
 
 # 📌 **4. Sessions Domain (학습 세션)**
-
-## **POST /sessions — 세션 생성**
-
-문서 기반 문제 생성 → 세션 및 session_questions 자동 생성
-
-### ✔ Request
-
-```json
-{
-  "user_id": 1,
-  "course_id": 10,
-  "document_id": 33
-}
-
-```
-
-### ✔ Response
-
-```json
-{
-  "session_id": 100,
-  "status": "NotStarted",
-  "keywords": ["프로세스", "CPU 스케줄링"]
-}
-
-```
-
----
 
 ## **GET /sessions/:sessionId — 세션 문제 조회**
 
@@ -338,15 +261,57 @@ JWT 없이 간단 로그인 → user_id만 반환
   {
     "id": 100,
     "status": "Completed",
-    "score": 100,
     "created_at": "2025-01-01"
   },
   {
     "id": 101,
     "status": "Completed",
-    "score": 60,
     "created_at": "2025-01-02"
   }
 ]
 
+```
+
+## **GET /sessions/recent?user_id=1 — 오늘의 세션 5개**
+
+### ✔ Response
+
+```json
+[
+    {
+        "sessionId": 8,
+        "createdAt": "2025-11-15T08:25:15.000+00:00",
+        "keywords": "한정자, 전칭명제",
+        "courseId": 1,
+        "courseTitle": "운영체제"
+    },
+    {
+        "sessionId": 7,
+        "createdAt": "2025-11-15T08:22:45.000+00:00",
+        "keywords": "predicates, quantified statements",
+        "courseId": 1,
+        "courseTitle": "운영체제"
+    },
+    {
+        "sessionId": 6,
+        "createdAt": "2025-11-15T08:19:47.000+00:00",
+        "keywords": "predicates, quantified statements",
+        "courseId": 1,
+        "courseTitle": "운영체제"
+    },
+    {
+        "sessionId": 5,
+        "createdAt": "2025-11-15T08:17:06.000+00:00",
+        "keywords": "predicates, quantified statements",
+        "courseId": 1,
+        "courseTitle": "운영체제"
+    },
+    {
+        "sessionId": 4,
+        "createdAt": "2025-11-15T08:14:25.000+00:00",
+        "keywords": "predicates, quantified statements",
+        "courseId": 1,
+        "courseTitle": "운영체제"
+    }
+]
 ```

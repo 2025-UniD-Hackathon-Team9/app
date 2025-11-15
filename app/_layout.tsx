@@ -6,6 +6,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
 import '../global.css';
+import { AuthProvider } from '@/src/contexts/AuthContext';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -45,31 +46,33 @@ export default function RootLayout() {
 
 function RootLayoutNav() {
   return (
-    <ThemeProvider value={DefaultTheme}>
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="modal" options={{ presentation: 'modal', headerShown: true }} />
-        <Stack.Screen
-          name="camera"
-          options={{
-            presentation: 'modal',
-            contentStyle: { backgroundColor: 'black' }
-          }}
-        />
-        <Stack.Screen name="subject" />
-        <Stack.Screen
-          name="subject-select"
-          options={{
-            presentation: 'modal',
-          }}
-        />
-        <Stack.Screen
-          name="add-subject"
-          options={{
-            presentation: 'modal',
-          }}
-        />
-      </Stack>
-    </ThemeProvider>
+    <AuthProvider>
+      <ThemeProvider value={DefaultTheme}>
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="modal" options={{ presentation: 'modal', headerShown: true }} />
+          <Stack.Screen
+            name="camera"
+            options={{
+              presentation: 'modal',
+              contentStyle: { backgroundColor: 'black' }
+            }}
+          />
+          <Stack.Screen name="subject" />
+          <Stack.Screen
+            name="subject-select"
+            options={{
+              presentation: 'modal',
+            }}
+          />
+          <Stack.Screen
+            name="add-subject"
+            options={{
+              presentation: 'modal',
+            }}
+          />
+        </Stack>
+      </ThemeProvider>
+    </AuthProvider>
   );
 }
