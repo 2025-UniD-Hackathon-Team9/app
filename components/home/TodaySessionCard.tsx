@@ -36,36 +36,40 @@ export default function TodaySessionCard({
   const slideAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    // 로딩이 끝나면 웰컴 메시지에서 실제 데이터로 전환
+    // 로딩이 끝나면 3초 후 웰컴 메시지에서 실제 데이터로 전환
     if (!isLoading && showWelcome) {
-      // Fade out welcome message
-      Animated.parallel([
-        Animated.timing(fadeAnim, {
-          toValue: 0,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-        Animated.timing(slideAnim, {
-          toValue: -20,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-      ]).start(() => {
-        setShowWelcome(false);
-        // Fade in actual data
+      const timer = setTimeout(() => {
+        // Fade out welcome message
         Animated.parallel([
           Animated.timing(fadeAnim, {
-            toValue: 1,
-            duration: 400,
+            toValue: 0,
+            duration: 300,
             useNativeDriver: true,
           }),
           Animated.timing(slideAnim, {
-            toValue: 0,
-            duration: 400,
+            toValue: -20,
+            duration: 300,
             useNativeDriver: true,
           }),
-        ]).start();
-      });
+        ]).start(() => {
+          setShowWelcome(false);
+          // Fade in actual data
+          Animated.parallel([
+            Animated.timing(fadeAnim, {
+              toValue: 1,
+              duration: 400,
+              useNativeDriver: true,
+            }),
+            Animated.timing(slideAnim, {
+              toValue: 0,
+              duration: 400,
+              useNativeDriver: true,
+            }),
+          ]).start();
+        });
+      }, 1000); // 1초 대기
+
+      return () => clearTimeout(timer);
     }
   }, [isLoading, showWelcome]);
 
