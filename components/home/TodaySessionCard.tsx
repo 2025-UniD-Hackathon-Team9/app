@@ -4,20 +4,20 @@ import { colors } from '@/constants/colors';
 import { calculateProgress, getMotivationMessage, getProgressEmoji } from '@/src/utils';
 
 /**
- * Props for the TodaySessionCard component
+ * TodaySessionCard 컴포넌트의 Props
  */
 interface TodaySessionCardProps {
-  /** Number of sessions completed today */
+  /** 오늘 완료한 세션 수 */
   completedSessions: number;
-  /** Total number of sessions planned for today */
+  /** 오늘 계획된 전체 세션 수 */
   totalSessions: number;
-  /** Name of the subject */
+  /** 과목 이름 */
   subject: string;
 }
 
 /**
- * Card component displaying today's study session progress
- * Shows completed sessions, progress bar, and motivational message
+ * 오늘의 학습 세션 진행 상황을 표시하는 카드 컴포넌트
+ * 완료된 세션, 진행률 바, 동기부여 메시지를 표시합니다
  */
 export default function TodaySessionCard({
   completedSessions,

@@ -13,18 +13,18 @@ import {
 import { DAYS_OF_WEEK } from '@/src/constants';
 
 /**
- * Props for the StudyCalendar component
+ * StudyCalendar 컴포넌트의 Props
  */
 interface StudyCalendarProps {
-  /** Array of study records with completion data */
+  /** 완료 데이터가 포함된 학습 기록 배열 */
   studyRecords: StudyRecord[];
-  /** The month to display in the calendar */
+  /** 달력에 표시할 월 */
   currentMonth: Date;
 }
 
 /**
- * Calendar component displaying study activity for a month
- * Shows activity levels with color coding and a legend
+ * 월별 학습 활동을 표시하는 달력 컴포넌트
+ * 색상 코딩과 범례로 활동 레벨을 표시합니다
  */
 export default function StudyCalendar({ studyRecords, currentMonth }: StudyCalendarProps) {
   const getDateString = (day: number): string => {

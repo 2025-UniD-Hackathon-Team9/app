@@ -1,13 +1,13 @@
 /**
- * API Client Configuration
+ * API 클라이언트 설정
  *
- * Centralized HTTP client for all API requests with error handling and type safety.
+ * 에러 처리와 타입 안전성을 갖춘 모든 API 요청을 위한 중앙화된 HTTP 클라이언트입니다.
  */
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000';
 
 /**
- * Custom error class for API errors
+ * API 에러를 위한 커스텀 에러 클래스
  */
 export class ApiError extends Error {
   constructor(
@@ -21,12 +21,12 @@ export class ApiError extends Error {
 }
 
 /**
- * Type for HTTP methods
+ * HTTP 메서드 타입
  */
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
 
 /**
- * Common request options
+ * 공통 요청 옵션
  */
 interface RequestOptions {
   headers?: Record<string, string>;
@@ -34,11 +34,11 @@ interface RequestOptions {
 }
 
 /**
- * Makes an HTTP request with error handling
- * @param endpoint - API endpoint path
- * @param method - HTTP method
- * @param options - Request options
- * @returns Promise with typed response data
+ * 에러 처리와 함께 HTTP 요청을 수행합니다
+ * @param endpoint - API 엔드포인트 경로
+ * @param method - HTTP 메서드
+ * @param options - 요청 옵션
+ * @returns 타입이 지정된 응답 데이터가 포함된 Promise
  */
 async function request<T>(
   endpoint: string,
@@ -73,7 +73,7 @@ async function request<T>(
       );
     }
 
-    // Handle empty responses (e.g., 204 No Content)
+    // 빈 응답 처리 (예: 204 No Content)
     if (response.status === 204) {
       return {} as T;
     }
@@ -83,7 +83,7 @@ async function request<T>(
     if (error instanceof ApiError) {
       throw error;
     }
-    // Network or other errors
+    // 네트워크 또는 기타 에러
     throw new ApiError(
       error instanceof Error ? error.message : 'Network request failed',
       0
@@ -92,39 +92,39 @@ async function request<T>(
 }
 
 /**
- * API client with typed methods
+ * 타입이 지정된 메서드를 가진 API 클라이언트
  */
 export const apiClient = {
   /**
-   * GET request
+   * GET 요청
    */
   get<T>(endpoint: string, headers?: Record<string, string>): Promise<T> {
     return request<T>(endpoint, 'GET', { headers });
   },
 
   /**
-   * POST request
+   * POST 요청
    */
   post<T>(endpoint: string, data?: any, headers?: Record<string, string>): Promise<T> {
     return request<T>(endpoint, 'POST', { body: data, headers });
   },
 
   /**
-   * PUT request
+   * PUT 요청
    */
   put<T>(endpoint: string, data?: any, headers?: Record<string, string>): Promise<T> {
     return request<T>(endpoint, 'PUT', { body: data, headers });
   },
 
   /**
-   * PATCH request
+   * PATCH 요청
    */
   patch<T>(endpoint: string, data?: any, headers?: Record<string, string>): Promise<T> {
     return request<T>(endpoint, 'PATCH', { body: data, headers });
   },
 
   /**
-   * DELETE request
+   * DELETE 요청
    */
   delete<T>(endpoint: string, headers?: Record<string, string>): Promise<T> {
     return request<T>(endpoint, 'DELETE', { headers });

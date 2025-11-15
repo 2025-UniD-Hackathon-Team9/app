@@ -1,12 +1,12 @@
 /**
- * Centralized application constants
+ * 중앙화된 애플리케이션 상수
  */
 
 import { colors } from '@/constants/colors';
 import type { Subject } from '@/src/types';
 
 /**
- * Default subjects available in the application
+ * 애플리케이션에서 사용 가능한 기본 과목
  */
 export const DEFAULT_SUBJECTS: Subject[] = [
   { id: 'math', name: '수학', icon: '📐', color: colors.primary[500] },
@@ -17,14 +17,14 @@ export const DEFAULT_SUBJECTS: Subject[] = [
 ];
 
 /**
- * Available icons for creating new subjects
+ * 새 과목 생성 시 사용 가능한 아이콘
  */
 export const AVAILABLE_SUBJECT_ICONS = [
   '📐', '⚛️', '🧪', '📚', '✏️', '🎨', '🎵', '⚽', '🌍', '💻', '📖', '🔬', '🏛️', '📊'
 ];
 
 /**
- * Available colors for creating new subjects
+ * 새 과목 생성 시 사용 가능한 색상
  */
 export const AVAILABLE_SUBJECT_COLORS = [
   colors.primary[500],
@@ -42,21 +42,21 @@ export const AVAILABLE_SUBJECT_COLORS = [
 ];
 
 /**
- * Days of the week in Korean
+ * 한글 요일 이름
  */
 export const DAYS_OF_WEEK = ['일', '월', '화', '수', '목', '금', '토'];
 
 /**
- * Activity level thresholds for study sessions
+ * 학습 세션의 활동 레벨 임계값
  */
 export const ACTIVITY_THRESHOLDS = {
-  LOW: 3,      // Less than 3 sessions = low activity
-  MEDIUM: 5,   // Less than 5 sessions = medium activity
-  // 5 or more sessions = high activity
+  LOW: 3,      // 3회 미만의 세션 = 낮은 활동
+  MEDIUM: 5,   // 5회 미만의 세션 = 중간 활동
+  // 5회 이상의 세션 = 높은 활동
 } as const;
 
 /**
- * Common spacing values for consistent UI
+ * 일관된 UI를 위한 공통 간격 값
  */
 export const SPACING = {
   xs: 4,
@@ -69,7 +69,7 @@ export const SPACING = {
 } as const;
 
 /**
- * Common border radius values
+ * 공통 테두리 반경 값
  */
 export const BORDER_RADIUS = {
   sm: 8,

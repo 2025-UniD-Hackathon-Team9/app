@@ -5,16 +5,16 @@ import { colors } from '@/constants/colors';
 import type { Subject } from '@/src/types';
 
 /**
- * Props for the SubjectSelector component
+ * SubjectSelector 컴포넌트의 Props
  */
 interface SubjectSelectorProps {
-  /** Array of subjects to display */
+  /** 표시할 과목 배열 */
   subjects: Subject[];
 }
 
 /**
- * Horizontal scrollable subject selector component
- * Displays subject cards and an add button to create new subjects
+ * 가로 스크롤 가능한 과목 선택 컴포넌트
+ * 과목 카드와 새 과목 생성 추가 버튼을 표시합니다
  */
 export default function SubjectSelector({
   subjects,

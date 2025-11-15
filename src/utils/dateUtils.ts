@@ -1,13 +1,13 @@
 /**
- * Date utility functions
+ * 날짜 유틸리티 함수
  */
 
 import { DAYS_OF_WEEK } from '@/src/constants';
 
 /**
- * Formats a date string to YYYY-MM-DD format
- * @param date - Date object to format
- * @returns Formatted date string
+ * 날짜를 YYYY-MM-DD 형식의 문자열로 포맷합니다
+ * @param date - 포맷할 Date 객체
+ * @returns 포맷된 날짜 문자열
  */
 export function formatDateToYYYYMMDD(date: Date): string {
   const year = date.getFullYear();
@@ -17,9 +17,9 @@ export function formatDateToYYYYMMDD(date: Date): string {
 }
 
 /**
- * Gets the day of week name in Korean for a given date
- * @param date - Date string in YYYY-MM-DD format or Date object
- * @returns Korean day of week (e.g., '월', '화')
+ * 주어진 날짜의 한글 요일 이름을 가져옵니다
+ * @param date - YYYY-MM-DD 형식의 날짜 문자열 또는 Date 객체
+ * @returns 한글 요일 (예: '월', '화')
  */
 export function getDayOfWeek(date: string | Date): string {
   const dateObj = typeof date === 'string' ? new Date(date) : date;
@@ -27,9 +27,9 @@ export function getDayOfWeek(date: string | Date): string {
 }
 
 /**
- * Gets the number of days in a month
- * @param date - Date object representing the month
- * @returns Object containing days in month and starting day of week
+ * 월의 일수를 가져옵니다
+ * @param date - 월을 나타내는 Date 객체
+ * @returns 월의 일수와 시작 요일을 포함한 객체
  */
 export function getDaysInMonth(date: Date) {
   const year = date.getFullYear();
@@ -43,11 +43,11 @@ export function getDaysInMonth(date: Date) {
 }
 
 /**
- * Checks if a date is today
- * @param day - Day of month
- * @param month - Month (0-11)
- * @param year - Year
- * @returns True if the date is today
+ * 날짜가 오늘인지 확인합니다
+ * @param day - 월의 일
+ * @param month - 월 (0-11)
+ * @param year - 연도
+ * @returns 해당 날짜가 오늘이면 true
  */
 export function isToday(day: number, month: number, year: number): boolean {
   const today = new Date();
@@ -59,9 +59,9 @@ export function isToday(day: number, month: number, year: number): boolean {
 }
 
 /**
- * Formats a month name in Korean
- * @param date - Date object
- * @returns Formatted month name (e.g., '2025년 11월')
+ * 한글로 월 이름을 포맷합니다
+ * @param date - Date 객체
+ * @returns 포맷된 월 이름 (예: '2025년 11월')
  */
 export function formatMonthName(date: Date): string {
   return date.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long' });
