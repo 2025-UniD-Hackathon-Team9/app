@@ -5,3 +5,5 @@
 export * from './dateUtils';
 export * from './studyUtils';
 export * from './subjectUtils';
+export * from './cache';
+export * from './performance';
