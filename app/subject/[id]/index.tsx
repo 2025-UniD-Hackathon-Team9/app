@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, ScrollView, Pressable, StatusBar, Animated } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, StatusBar, Animated, Easing } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -138,43 +138,43 @@ export default function SubjectScreen() {
       Animated.timing(shakeAnim, {
         toValue: 10,
         duration: 50,
-        easing: Animated.easeOut,
+        easing: Easing.out(Easing.ease),
         useNativeDriver: true,
       }),
       Animated.timing(shakeAnim, {
         toValue: -10,
         duration: 50,
-        easing: Animated.easeInOut,
+        easing: Easing.inOut(Easing.ease),
         useNativeDriver: true,
       }),
       Animated.timing(shakeAnim, {
         toValue: 8,
         duration: 50,
-        easing: Animated.easeInOut,
+        easing: Easing.inOut(Easing.ease),
         useNativeDriver: true,
       }),
       Animated.timing(shakeAnim, {
         toValue: -8,
         duration: 50,
-        easing: Animated.easeInOut,
+        easing: Easing.inOut(Easing.ease),
         useNativeDriver: true,
       }),
       Animated.timing(shakeAnim, {
         toValue: 5,
         duration: 50,
-        easing: Animated.easeInOut,
+        easing: Easing.inOut(Easing.ease),
         useNativeDriver: true,
       }),
       Animated.timing(shakeAnim, {
         toValue: -5,
         duration: 50,
-        easing: Animated.easeInOut,
+        easing: Easing.inOut(Easing.ease),
         useNativeDriver: true,
       }),
       Animated.timing(shakeAnim, {
         toValue: 0,
         duration: 50,
-        easing: Animated.easeIn,
+        easing: Easing.in(Easing.ease),
         useNativeDriver: true,
       }),
     ]).start();
