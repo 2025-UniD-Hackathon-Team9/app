@@ -1,7 +1,6 @@
 import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
-import { colors } from '@/constants/colors';
 
 const SUBJECT_INFO: { [key: string]: { name: string; icon: string; color: string } } = {
   math: { name: '수학', icon: '📐', color: colors.primary[500] },
@@ -12,6 +11,7 @@ const SUBJECT_INFO: { [key: string]: { name: string; icon: string; color: string
 };
 
 export default function SubjectScreen() {
+  const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const subject = SUBJECT_INFO[id] || { name: '과목', icon: '📖', color: colors.primary[500] };
@@ -56,6 +56,18 @@ export default function SubjectScreen() {
           <View style={styles.emptyState}>
             <Text style={styles.emptyText}>틀린 문제가 없습니다</Text>
           </View>
+        </View>
+
+        <View style={styles.section}>
+          <Pressable
+            onPress={() => router.push(`/subject/${id}/problem`)}
+            style={({ pressed }) => [
+              styles.testButton,
+              pressed && styles.testButtonPressed,
+            ]}
+          >
+            <Text style={styles.testButtonText}>문제 테스트</Text>
+          </Pressable>
         </View>
       </View>
     </ScrollView>
@@ -162,5 +174,26 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: colors.text.secondary,
     fontWeight: '500',
+  },
+  testButton: {
+    backgroundColor: colors.accent[500],
+    borderRadius: 16,
+    padding: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  testButtonPressed: {
+    backgroundColor: colors.accent[600],
+    opacity: 0.9,
+  },
+  testButtonText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: colors.neutral.black,
   },
 });
