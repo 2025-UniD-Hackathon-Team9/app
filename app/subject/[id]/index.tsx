@@ -28,38 +28,8 @@ export default function SubjectScreen() {
   const shimmerAnim = useRef(new Animated.Value(0)).current;
   const shakeAnim = useRef(new Animated.Value(0)).current;
 
-  useEffect(() => {
-    if (user) {
-      loadCourse();
-      loadSessions();
-    }
-  }, [user, id]);
-
-  useEffect(() => {
-    if (isLoading) {
-      Animated.loop(
-        Animated.sequence([
-          Animated.timing(shimmerAnim, {
-            toValue: 1,
-            duration: 1000,
-            useNativeDriver: true,
-          }),
-          Animated.timing(shimmerAnim, {
-            toValue: 0,
-            duration: 1000,
-            useNativeDriver: true,
-          }),
-        ])
-      ).start();
-    }
-  }, [isLoading]);
-
-  const shimmerOpacity = shimmerAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0.3, 1],
-  });
-
-  const loadCourse = async () => {
+  // Memoize loadCourse to avoid recreating on every render
+  const loadCourse = useCallback(async () => {
     if (!user) return;
 
     setIsLoading(true);
@@ -82,9 +52,10 @@ export default function SubjectScreen() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user, id]);
 
-  const loadSessions = async () => {
+  // Memoize loadSessions to avoid recreating on every render
+  const loadSessions = useCallback(async () => {
     if (!user) return;
 
     try {
@@ -93,7 +64,38 @@ export default function SubjectScreen() {
     } catch (error) {
       console.error('Failed to load sessions:', error);
     }
-  };
+  }, [user, id]);
+
+  useEffect(() => {
+    if (user) {
+      loadCourse();
+      loadSessions();
+    }
+  }, [user, loadCourse, loadSessions]);
+
+  useEffect(() => {
+    if (isLoading) {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(shimmerAnim, {
+            toValue: 1,
+            duration: 1000,
+            useNativeDriver: true,
+          }),
+          Animated.timing(shimmerAnim, {
+            toValue: 0,
+            duration: 1000,
+            useNativeDriver: true,
+          }),
+        ])
+      ).start();
+    }
+  }, [isLoading, shimmerAnim]);
+
+  const shimmerOpacity = shimmerAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.3, 1],
+  });
 
   // Memoize quiz statistics to avoid recalculation on every render
   const quizStats = useMemo(() => {
