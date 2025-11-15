@@ -58,10 +58,12 @@ export default function CameraScreen() {
         const photo = await cameraRef.current.takePictureAsync();
         if (photo) {
           setPhoto(photo.uri);
-          // TODO: Upstage AI로 사진 전송
           console.log('Photo taken:', photo.uri);
-          Alert.alert('사진 촬영 완료', '사진이 저장되었습니다.');
-          router.back();
+          // 과목 선택 화면으로 이동
+          router.push({
+            pathname: '/subject-select',
+            params: { photoUri: photo.uri },
+          });
         }
       } catch (error) {
         console.error('Error taking picture:', error);

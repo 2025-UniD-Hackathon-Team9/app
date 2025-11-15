@@ -187,6 +187,7 @@ export default function ProblemScreen() {
             disabled={selectedOption === null}
             style={({ pressed }) => [
               styles.submitButton,
+              { backgroundColor: subject.color },
               selectedOption === null && styles.submitButtonDisabled,
               pressed && selectedOption !== null && styles.submitButtonPressed,
             ]}
@@ -198,7 +199,7 @@ export default function ProblemScreen() {
             onPress={handleNext}
             style={({ pressed }) => [
               styles.submitButton,
-              styles.continueButton,
+              { backgroundColor: subject.color },
               pressed && styles.submitButtonPressed,
             ]}
           >
@@ -424,7 +425,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.primary[500],
   },
   submitButtonDisabled: {
     backgroundColor: colors.border.light,
@@ -432,9 +432,6 @@ const styles = StyleSheet.create({
   },
   submitButtonPressed: {
     opacity: 0.8,
-  },
-  continueButton: {
-    backgroundColor: colors.accent[500],
   },
   submitButtonText: {
     fontSize: 18,

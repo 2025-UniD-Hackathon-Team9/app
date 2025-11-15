@@ -66,7 +66,7 @@ export default function StudyCalendar({ studyRecords, currentMonth }: StudyCalen
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>이번 달 활동</Text>
+        <Text style={styles.title}>활동</Text>
         <Text style={styles.monthName}>{monthName}</Text>
       </View>
 
@@ -152,26 +152,26 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 24,
     marginHorizontal: 20,
-    marginVertical: 12,
+    marginBottom: 12,
     shadowColor: colors.shadow,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
+    shadowOpacity: 0.06,
     shadowRadius: 8,
-    elevation: 2,
+    elevation: 3,
   },
   header: {
-    marginBottom: 24,
+    marginBottom: 20,
   },
   title: {
-    fontSize: 24,
+    fontSize: 18,
     fontWeight: 'bold',
     color: colors.text.primary,
-    marginBottom: 6,
-    letterSpacing: -0.5,
+    marginBottom: 4,
+    letterSpacing: -0.3,
   },
   monthName: {
-    fontSize: 16,
-    fontWeight: '500',
+    fontSize: 14,
+    fontWeight: '600',
     color: colors.text.secondary,
   },
   weekDaysRow: {

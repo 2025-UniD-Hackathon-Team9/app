@@ -1,6 +1,7 @@
-import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, StatusBar } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
+import { colors } from "@/constants/colors";
 
 const SUBJECT_INFO: { [key: string]: { name: string; icon: string; color: string } } = {
   math: { name: '수학', icon: '📐', color: colors.primary[500] },
@@ -10,22 +11,101 @@ const SUBJECT_INFO: { [key: string]: { name: string; icon: string; color: string
   korean: { name: '국어', icon: '✏️', color: '#F38181' },
 };
 
+// 샘플 활동 데이터 (최근 7일)
+const SAMPLE_ACTIVITY_DATA = [
+  { date: '2025-11-09', sessions: 0 },
+  { date: '2025-11-10', sessions: 6 },
+  { date: '2025-11-11', sessions: 0 },
+  { date: '2025-11-12', sessions: 3 },
+  { date: '2025-11-13', sessions: 5 },
+  { date: '2025-11-14', sessions: 0 },
+  { date: '2025-11-15', sessions: 2 },
+];
+
 export default function SubjectScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const router = useRouter();
   const subject = SUBJECT_INFO[id] || { name: '과목', icon: '📖', color: colors.primary[500] };
+
+  const getActivityLevel = (sessions: number): number => {
+    if (sessions === 0) return 0;
+    if (sessions < 3) return 1;
+    if (sessions < 5) return 2;
+    return 3;
+  };
+
+  const getDayOfWeek = (dateStr: string): string => {
+    const date = new Date(dateStr);
+    const days = ['일', '월', '화', '수', '목', '금', '토'];
+    return days[date.getDay()];
+  };
+
+  const getActivityColor = (level: number) => {
+    if (level === 0) return colors.neutral.gray100;
+    const baseColor = subject.color;
+    // 간단하게 opacity로 레벨 표현
+    if (level === 1) return `${baseColor}40`; // 25% opacity
+    if (level === 2) return `${baseColor}80`; // 50% opacity
+    return baseColor; // 100% opacity
+  };
 
   return (
     <ScrollView style={styles.container}>
+      <StatusBar barStyle="dark-content" />
       <View style={styles.header}>
-        <Pressable style={styles.backButton} onPress={() => router.back()}>
-          <MaterialIcons name="arrow-back" size={24} color={colors.text.primary} />
-        </Pressable>
-        <View style={[styles.iconContainer, { backgroundColor: subject.color }]}>
-          <Text style={styles.icon}>{subject.icon}</Text>
+        {/* 뒤로가기 버튼 */}
+        <View style={styles.topBar}>
+          <Pressable style={styles.backButton} onPress={() => router.back()}>
+            <MaterialIcons name="arrow-back" size={24} color={colors.text.primary} />
+          </Pressable>
         </View>
-        <Text style={styles.title}>{subject.name}</Text>
+
+        {/* 타이틀 섹션 */}
+        <View style={styles.titleSection}>
+          <View style={[styles.iconContainer, { backgroundColor: subject.color }]}>
+            <Text style={styles.icon}>{subject.icon}</Text>
+          </View>
+          <View style={styles.titleTextContainer}>
+            <Text style={styles.title}>{subject.name}</Text>
+          </View>
+        </View>
+
+        {/* 주간 활동 그래프 */}
+        <View style={styles.activitySection}>
+          <Text style={styles.activitySectionTitle}>최근 7일 활동</Text>
+          <View style={styles.activityGrid}>
+            {SAMPLE_ACTIVITY_DATA.map((day, index) => {
+              const level = getActivityLevel(day.sessions);
+              const isToday = index === SAMPLE_ACTIVITY_DATA.length - 1;
+              return (
+                <View key={day.date} style={styles.activityDayContainer}>
+                  <View
+                    style={[
+                      styles.activityDay,
+                      { backgroundColor: getActivityColor(level) },
+                      isToday && { borderWidth: 2, borderColor: subject.color },
+                    ]}
+                  >
+                    {day.sessions > 0 && (
+                      <Text style={[
+                        styles.activityNumber,
+                        level === 1 && { color: subject.color }
+                      ]}>
+                        {day.sessions}
+                      </Text>
+                    )}
+                  </View>
+                  <Text style={[
+                    styles.activityDayLabel,
+                    isToday && { color: subject.color, fontWeight: '700' }
+                  ]}>
+                    {getDayOfWeek(day.date)}
+                  </Text>
+                </View>
+              );
+            })}
+          </View>
+        </View>
       </View>
 
       <View style={styles.content}>
@@ -41,11 +121,11 @@ export default function SubjectScreen() {
           <Text style={styles.sectionTitle}>퀴즈 통계</Text>
           <View style={styles.statsGrid}>
             <View style={styles.statCard}>
-              <Text style={styles.statValue}>0</Text>
+              <Text style={[styles.statValue, { color: subject.color }]}>0</Text>
               <Text style={styles.statLabel}>총 퀴즈</Text>
             </View>
             <View style={styles.statCard}>
-              <Text style={styles.statValue}>0%</Text>
+              <Text style={[styles.statValue, { color: subject.color }]}>0%</Text>
               <Text style={styles.statLabel}>정답률</Text>
             </View>
           </View>
@@ -63,7 +143,8 @@ export default function SubjectScreen() {
             onPress={() => router.push(`/subject/${id}/problem`)}
             style={({ pressed }) => [
               styles.testButton,
-              pressed && styles.testButtonPressed,
+              { backgroundColor: subject.color },
+              pressed && { opacity: 0.8 },
             ]}
           >
             <Text style={styles.testButtonText}>문제 테스트</Text>
@@ -80,38 +161,87 @@ const styles = StyleSheet.create({
     backgroundColor: colors.neutral.gray50,
   },
   header: {
-    alignItems: 'center',
     paddingTop: 60,
-    paddingBottom: 40,
-    paddingHorizontal: 20,
+    paddingBottom: 32,
+    paddingHorizontal: 24,
     backgroundColor: colors.neutral.white,
-    position: 'relative',
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 2,
   },
-  backButton: {
-    position: 'absolute',
-    top: 60,
-    left: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    zIndex: 10,
-  },
-  iconContainer: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    alignItems: 'center',
-    justifyContent: 'center',
+  topBar: {
     marginBottom: 20,
   },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.neutral.gray50,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  titleSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+    marginBottom: 28,
+  },
+  iconContainer: {
+    width: 64,
+    height: 64,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   icon: {
-    fontSize: 52,
+    fontSize: 36,
+  },
+  titleTextContainer: {
+    flex: 1,
   },
   title: {
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: 'bold',
     color: colors.text.primary,
     letterSpacing: -0.8,
+  },
+  activitySection: {
+    paddingTop: 8,
+  },
+  activitySectionTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: colors.text.primary,
+    marginBottom: 16,
+  },
+  activityGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  activityDayContainer: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 8,
+  },
+  activityDay: {
+    width: '100%',
+    aspectRatio: 1,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  activityNumber: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: colors.neutral.white,
+  },
+  activityDayLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.text.secondary,
   },
   content: {
     padding: 20,
@@ -166,7 +296,6 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 36,
     fontWeight: 'bold',
-    color: colors.primary[500],
     marginBottom: 8,
     letterSpacing: -1,
   },
@@ -176,7 +305,6 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   testButton: {
-    backgroundColor: colors.accent[500],
     borderRadius: 16,
     padding: 16,
     alignItems: 'center',
@@ -186,10 +314,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 8,
     elevation: 4,
-  },
-  testButtonPressed: {
-    backgroundColor: colors.accent[600],
-    opacity: 0.9,
   },
   testButtonText: {
     fontSize: 18,

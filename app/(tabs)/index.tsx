@@ -1,5 +1,6 @@
-import { ScrollView, View, StyleSheet } from 'react-native';
+import { ScrollView, View, StyleSheet, Text, StatusBar } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import FloatingActionButton from '@/components/layout/FloatingActionButton';
 import TodaySessionCard from '@/components/home/TodaySessionCard';
 import SubjectSelector from '@/components/home/SubjectSelector';
@@ -29,6 +30,7 @@ const SAMPLE_STUDY_RECORDS = [
 
 export default function TabOneScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
 
   const handlePdfUpload = () => {
     router.push('/camera');
@@ -36,11 +38,17 @@ export default function TabOneScreen() {
 
   return (
     <>
+      <StatusBar barStyle="dark-content" />
       <ScrollView
         style={styles.container}
         contentContainerStyle={styles.contentContainer}
         showsVerticalScrollIndicator={false}
       >
+        {/* 커스텀 헤더 */}
+        <View style={[styles.header, { paddingTop: insets.top + 16 }]}>
+          <Text style={styles.headerTitle}>학습 대시보드</Text>
+        </View>
+
         <TodaySessionCard
           completedSessions={2}
           totalSessions={5}
@@ -70,6 +78,17 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     paddingBottom: 100,
+  },
+  header: {
+    paddingBottom: 24,
+    paddingHorizontal: 24,
+    backgroundColor: colors.neutral.gray50,
+  },
+  headerTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: colors.text.primary,
+    letterSpacing: -0.8,
   },
   bottomSpacing: {
     height: 20,

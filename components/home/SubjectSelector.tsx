@@ -25,7 +25,7 @@ export default function SubjectSelector({
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>과목을 선택하세요</Text>
+      <Text style={styles.title}>과목</Text>
 
       <ScrollView
         horizontal
@@ -39,21 +39,13 @@ export default function SubjectSelector({
               key={subject.id}
               style={({ pressed }) => [
                 styles.subjectCard,
+                { backgroundColor: subject.color },
                 pressed && styles.subjectCardPressed,
               ]}
               onPress={() => handleSubjectPress(subject.id)}
             >
-              <View
-                style={[
-                  styles.iconContainer,
-                  { backgroundColor: subject.color }
-                ]}
-              >
-                <Text style={styles.icon}>{subject.icon}</Text>
-              </View>
-              <Text style={styles.subjectName}>
-                {subject.name}
-              </Text>
+              <Text style={styles.icon}>{subject.icon}</Text>
+              <Text style={styles.subjectName}>{subject.name}</Text>
             </Pressable>
           );
         })}
@@ -64,56 +56,48 @@ export default function SubjectSelector({
 
 const styles = StyleSheet.create({
   container: {
-    paddingVertical: 24,
+    paddingVertical: 20,
   },
   title: {
-    fontSize: 24,
+    fontSize: 18,
     fontWeight: 'bold',
     color: colors.text.primary,
     paddingHorizontal: 20,
-    marginBottom: 20,
-    letterSpacing: -0.5,
+    marginBottom: 16,
+    letterSpacing: -0.3,
   },
   scrollView: {
     overflow: 'visible',
   },
   scrollContent: {
     paddingHorizontal: 20,
-    paddingVertical: 8,
     gap: 12,
   },
   subjectCard: {
+    flexDirection: 'row',
     alignItems: 'center',
-    gap: 14,
-    paddingVertical: 24,
-    paddingHorizontal: 24,
-    borderRadius: 20,
-    backgroundColor: colors.neutral.white,
-    minWidth: 110,
+    gap: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderRadius: 16,
+    minWidth: 130,
     shadowColor: colors.shadow,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
+    shadowOpacity: 0.15,
     shadowRadius: 8,
-    elevation: 2,
+    elevation: 3,
   },
   subjectCardPressed: {
-    opacity: 0.7,
-    transform: [{ scale: 0.98 }],
-  },
-  iconContainer: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
+    opacity: 0.85,
+    transform: [{ scale: 0.97 }],
   },
   icon: {
-    fontSize: 36,
+    fontSize: 28,
   },
   subjectName: {
     fontSize: 16,
     fontWeight: '700',
-    color: colors.text.primary,
+    color: colors.neutral.white,
     letterSpacing: -0.3,
   },
 });
