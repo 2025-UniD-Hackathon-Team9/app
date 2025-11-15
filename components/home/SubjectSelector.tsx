@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, memo, useCallback } from 'react';
 import { View, Text, StyleSheet, Pressable, ScrollView, Animated } from 'react-native';
 import { useRouter } from 'expo-router';
 import { colors } from '@/constants/colors';
@@ -17,8 +17,9 @@ interface SubjectSelectorProps {
 /**
  * 가로 스크롤 가능한 과목 선택 컴포넌트
  * 과목 카드와 새 과목 생성 추가 버튼을 표시합니다
+ * React.memo로 최적화되어 props가 변경되지 않으면 리렌더링하지 않습니다
  */
-export default function SubjectSelector({
+const SubjectSelector = memo(function SubjectSelector({
   subjects,
   isLoading = false,
 }: SubjectSelectorProps) {
@@ -49,9 +50,14 @@ export default function SubjectSelector({
     outputRange: [0.3, 1],
   });
 
-  const handleSubjectPress = (subjectId: string) => {
+  // Memoize the press handler to prevent recreation on every render
+  const handleSubjectPress = useCallback((subjectId: string) => {
     router.push(`/subject/${subjectId}`);
-  };
+  }, [router]);
+
+  const handleAddPress = useCallback(() => {
+    router.push('/add-subject');
+  }, [router]);
 
   return (
     <View style={styles.container}>
@@ -98,7 +104,7 @@ export default function SubjectSelector({
                 styles.addButton,
                 pressed && styles.addButtonPressed,
               ]}
-              onPress={() => router.push('/add-subject')}
+              onPress={handleAddPress}
             >
               <Text style={styles.addIcon}>+</Text>
               <Text style={styles.addText}>추가</Text>
@@ -108,7 +114,9 @@ export default function SubjectSelector({
       </ScrollView>
     </View>
   );
-}
+});
+
+export default SubjectSelector;
 
 const styles = StyleSheet.create({
   container: {

@@ -5,9 +5,9 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { colors } from "@/constants/colors";
 import { SUBJECT_THEME_PALETTE } from '@/src/constants';
 import type { StudyRecord } from '@/src/types';
-import { getActivityColor } from '@/src/utils';
-import { getDayOfWeek, getActivityLevel } from '@/src/utils';
-import { useState, useEffect, useRef } from 'react';
+import { getActivityColor, getDayOfWeek, getActivityLevel } from '@/src/utils';
+import { extractDateFromISO } from '@/src/utils/dateUtils';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { getCourses } from '@/src/api/courses';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { getSessionHistory, type SessionHistory } from '@/src/api/sessions';
@@ -95,15 +95,19 @@ export default function SubjectScreen() {
     }
   };
 
-  // 퀴즈 통계 계산
-  const completedSessions = sessions.filter(s => s.status === 'Completed');
-  const totalQuizzes = completedSessions.length;
-  const averageScore = totalQuizzes > 0
-    ? Math.round(completedSessions.reduce((sum, s) => sum + (s.score || 0), 0) / totalQuizzes)
-    : 0;
+  // Memoize quiz statistics to avoid recalculation on every render
+  const quizStats = useMemo(() => {
+    const completedSessions = sessions.filter(s => s.status === 'Completed');
+    const totalQuizzes = completedSessions.length;
+    const averageScore = totalQuizzes > 0
+      ? Math.round(completedSessions.reduce((sum, s) => sum + (s.score || 0), 0) / totalQuizzes)
+      : 0;
+    
+    return { totalQuizzes, averageScore };
+  }, [sessions]);
 
-  // 최근 7일 활동 데이터 계산
-  const getRecentActivityData = (): StudyRecord[] => {
+  // Memoize recent activity data computation
+  const activityData = useMemo((): StudyRecord[] => {
     const today = new Date();
     const recentDays: StudyRecord[] = [];
 
@@ -112,9 +116,9 @@ export default function SubjectScreen() {
       date.setDate(date.getDate() - i);
       const dateString = date.toISOString().split('T')[0];
 
-      // 해당 날짜에 완료된 세션 개수 계산
+      // Count completed sessions on this date using optimized date extraction
       const sessionsOnDate = sessions.filter(s => {
-        const sessionDate = new Date(s.created_at).toISOString().split('T')[0];
+        const sessionDate = extractDateFromISO(s.created_at);
         return sessionDate === dateString && s.status === 'Completed';
       }).length;
 
@@ -125,11 +129,10 @@ export default function SubjectScreen() {
     }
 
     return recentDays;
-  };
+  }, [sessions]);
 
-  const activityData = getRecentActivityData();
-
-  const triggerShake = () => {
+  // Use useCallback to memoize the shake animation trigger
+  const triggerShake = useCallback(() => {
     // iOS 스타일 흔들림 애니메이션 - 가속도가 있는 자연스러운 흔들림
     Animated.sequence([
       Animated.timing(shakeAnim, {
@@ -175,7 +178,21 @@ export default function SubjectScreen() {
         useNativeDriver: true,
       }),
     ]).start();
-  };
+  }, [shakeAnim]);
+
+  // Memoize session press handler
+  const handleSessionPress = useCallback((sessionId: number) => {
+    router.push(`/subject/${id}/problem?sessionId=${sessionId}`);
+  }, [router, id]);
+
+  // Memoize test button press handler
+  const handleTestButtonPress = useCallback(() => {
+    if (sessions.length > 0) {
+      router.push(`/subject/${id}/problem?sessionId=${sessions[0].id}`);
+    } else {
+      triggerShake();
+    }
+  }, [sessions, router, id, triggerShake]);
 
   if (isLoading) {
     return (
@@ -301,7 +318,7 @@ export default function SubjectScreen() {
                     styles.sessionCard,
                     pressed && { opacity: 0.7 },
                   ]}
-                  onPress={() => router.push(`/subject/${id}/problem?sessionId=${session.id}`)}
+                  onPress={() => handleSessionPress(session.id)}
                 >
                   <View style={styles.sessionHeader}>
                     <View style={[styles.sessionStatusBadge, session.status === 'Completed' && { backgroundColor: colors.primary[100] }]}>
@@ -337,11 +354,11 @@ export default function SubjectScreen() {
           <Text style={styles.sectionTitle}>내 성취도</Text>
           <View style={styles.statsGrid}>
             <View style={styles.statCard}>
-              <Text style={[styles.statValue, { color: subject.color }]}>{totalQuizzes}</Text>
+              <Text style={[styles.statValue, { color: subject.color }]}>{quizStats.totalQuizzes}</Text>
               <Text style={styles.statLabel}>복습 횟수</Text>
             </View>
             <View style={styles.statCard}>
-              <Text style={[styles.statValue, { color: subject.color }]}>{averageScore}점</Text>
+              <Text style={[styles.statValue, { color: subject.color }]}>{quizStats.averageScore}점</Text>
               <Text style={styles.statLabel}>평균 점수</Text>
             </View>
           </View>
@@ -361,13 +378,7 @@ export default function SubjectScreen() {
             }}
           >
             <Pressable
-              onPress={() => {
-                if (sessions.length > 0) {
-                  router.push(`/subject/${id}/problem?sessionId=${sessions[0].id}`);
-                } else {
-                  triggerShake();
-                }
-              }}
+              onPress={handleTestButtonPress}
               style={({ pressed }) => [
                 styles.testButton,
                 sessions.length === 0

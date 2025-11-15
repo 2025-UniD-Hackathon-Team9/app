@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, memo } from 'react';
 import { View, Text, StyleSheet, Animated } from 'react-native';
 import { colors } from '@/constants/colors';
 import { calculateProgress, getMotivationMessage, getProgressEmoji } from '@/src/utils';
@@ -22,8 +22,9 @@ interface TodaySessionCardProps {
 /**
  * 오늘의 학습 세션 진행 상황을 표시하는 카드 컴포넌트
  * 완료된 세션, 진행률 바, 동기부여 메시지를 표시합니다
+ * React.memo로 최적화되어 props가 변경되지 않으면 리렌더링하지 않습니다
  */
-export default function TodaySessionCard({
+const TodaySessionCard = memo(function TodaySessionCard({
   completedSessions,
   totalSessions,
   subject,
@@ -139,7 +140,9 @@ export default function TodaySessionCard({
       <Text style={styles.motivationText}>{getMotivationMessage(completedSessions, totalSessions)}</Text>
     </Animated.View>
   );
-}
+});
+
+export default TodaySessionCard;
 
 const styles = StyleSheet.create({
   container: {

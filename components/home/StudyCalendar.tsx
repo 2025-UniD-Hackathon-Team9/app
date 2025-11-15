@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo, memo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { colors } from '@/constants/colors';
@@ -25,43 +25,52 @@ interface StudyCalendarProps {
 /**
  * 월별 학습 활동을 표시하는 달력 컴포넌트
  * 색상 코딩과 범례로 활동 레벨을 표시합니다
+ * React.memo로 최적화되어 props가 변경되지 않으면 리렌더링하지 않습니다
  */
-export default function StudyCalendar({ studyRecords, currentMonth }: StudyCalendarProps) {
-  const getDateString = (day: number): string => {
-    const year = currentMonth.getFullYear();
-    const month = currentMonth.getMonth();
-    const date = new Date(year, month, day);
-    return formatDateToYYYYMMDD(date);
-  };
+const StudyCalendar = memo(function StudyCalendar({ studyRecords, currentMonth }: StudyCalendarProps) {
+  // Memoize calendar computations to avoid recalculating on every render
+  const calendarData = useMemo(() => {
+    const getDateString = (day: number): string => {
+      const year = currentMonth.getFullYear();
+      const month = currentMonth.getMonth();
+      const date = new Date(year, month, day);
+      return formatDateToYYYYMMDD(date);
+    };
 
-  const getSessionsForDate = (day: number): number => {
-    const dateStr = getDateString(day);
-    const record = studyRecords.find(r => r.date === dateStr);
-    return record ? record.sessionsCompleted : 0;
-  };
+    const getSessionsForDate = (day: number): number => {
+      const dateStr = getDateString(day);
+      const record = studyRecords.find(r => r.date === dateStr);
+      return record ? record.sessionsCompleted : 0;
+    };
 
-  const { daysInMonth, startingDayOfWeek } = getDaysInMonth(currentMonth);
+    const { daysInMonth, startingDayOfWeek } = getDaysInMonth(currentMonth);
+    const monthName = formatMonthName(currentMonth);
 
-  const monthName = formatMonthName(currentMonth);
+    // Build calendar grid
+    const calendarDays: (number | null)[] = [];
+    
+    // Empty cells before first day
+    for (let i = 0; i < startingDayOfWeek; i++) {
+      calendarDays.push(null);
+    }
+    
+    // Actual days
+    for (let day = 1; day <= daysInMonth; day++) {
+      calendarDays.push(day);
+    }
 
-  // 달력 그리드 생성
-  const calendarDays: (number | null)[] = [];
-
-  // 시작 요일 전까지 빈 칸
-  for (let i = 0; i < startingDayOfWeek; i++) {
-    calendarDays.push(null);
-  }
-
-  // 실제 날짜들
-  for (let day = 1; day <= daysInMonth; day++) {
-    calendarDays.push(day);
-  }
+    return {
+      calendarDays,
+      monthName,
+      getSessionsForDate,
+    };
+  }, [studyRecords, currentMonth]);
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>복습 캘린더</Text>
-        <Text style={styles.monthName}>{monthName}</Text>
+        <Text style={styles.monthName}>{calendarData.monthName}</Text>
       </View>
 
       {/* 요일 헤더 */}
@@ -82,12 +91,12 @@ export default function StudyCalendar({ studyRecords, currentMonth }: StudyCalen
 
       {/* 날짜 그리드 */}
       <View style={styles.calendarGrid}>
-        {calendarDays.map((day, index) => {
+        {calendarData.calendarDays.map((day, index) => {
           if (day === null) {
             return <View key={`empty-${index}`} style={styles.dayCell} />;
           }
 
-          const sessions = getSessionsForDate(day);
+          const sessions = calendarData.getSessionsForDate(day);
           const level = getActivityLevel(sessions);
           const isTodayDate = isToday(
             day,
@@ -141,7 +150,9 @@ export default function StudyCalendar({ studyRecords, currentMonth }: StudyCalen
       </View>
     </View>
   );
-}
+});
+
+export default StudyCalendar;
 
 const styles = StyleSheet.create({
   container: {

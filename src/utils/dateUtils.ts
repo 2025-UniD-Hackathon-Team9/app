@@ -66,3 +66,23 @@ export function isToday(day: number, month: number, year: number): boolean {
 export function formatMonthName(date: Date): string {
   return date.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long' });
 }
+
+/**
+ * ISO 날짜 문자열에서 YYYY-MM-DD 형식의 날짜 부분만 추출합니다
+ * Date 객체 생성 없이 문자열 파싱만으로 처리하여 성능을 최적화합니다
+ * @param isoString - ISO 형식의 날짜 문자열 (예: '2025-11-15T12:34:56.789Z')
+ * @returns YYYY-MM-DD 형식의 날짜 문자열
+ */
+export function extractDateFromISO(isoString: string): string {
+  return isoString.split('T')[0];
+}
+
+/**
+ * 오늘 날짜를 YYYY-MM-DD 형식으로 반환합니다
+ * 여러 번 호출될 때 캐싱을 고려하여 사용하세요
+ * @returns 오늘 날짜 문자열
+ */
+export function getTodayString(): string {
+  return new Date().toISOString().split('T')[0];
+}
+
