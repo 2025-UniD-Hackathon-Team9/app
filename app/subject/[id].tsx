@@ -1,5 +1,6 @@
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
+import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { MaterialIcons } from '@expo/vector-icons';
 import { colors } from '@/constants/colors';
 
 const SUBJECT_INFO: { [key: string]: { name: string; icon: string; color: string } } = {
@@ -12,11 +13,15 @@ const SUBJECT_INFO: { [key: string]: { name: string; icon: string; color: string
 
 export default function SubjectScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const router = useRouter();
   const subject = SUBJECT_INFO[id] || { name: '과목', icon: '📖', color: colors.primary[500] };
 
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
+        <Pressable style={styles.backButton} onPress={() => router.back()}>
+          <MaterialIcons name="arrow-back" size={24} color={colors.text.primary} />
+        </Pressable>
         <View style={[styles.iconContainer, { backgroundColor: subject.color }]}>
           <Text style={styles.icon}>{subject.icon}</Text>
         </View>
@@ -64,9 +69,24 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: 'center',
-    paddingVertical: 40,
+    paddingTop: 60,
+    paddingBottom: 40,
     paddingHorizontal: 20,
     backgroundColor: colors.neutral.white,
+    position: 'relative',
+  },
+  backButton: {
+    position: 'absolute',
+    top: 60,
+    left: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    zIndex: 10,
+  },
+  backText: {
+    fontSize: 17,
+    color: colors.text.primary,
   },
   iconContainer: {
     width: 100,

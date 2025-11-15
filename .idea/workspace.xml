@@ -5,7 +5,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="5dc50da9-a525-4901-b2f2-aa12c1dd97d8" name="변경" comment="">
-      <change beforePath="$PROJECT_DIR$/app/_layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/_layout.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/camera.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/camera.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/home/StudyCalendar.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/components/home/StudyCalendar.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/home/TodaySessionCard.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/components/home/TodaySessionCard.tsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

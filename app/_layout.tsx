@@ -47,7 +47,7 @@ function RootLayoutNav() {
   return (
     <ThemeProvider value={DefaultTheme}>
       <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="(tabs)" options={{ headerShown: false, title: '홈' }} />
         <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
         <Stack.Screen
           name="camera"
@@ -55,6 +55,12 @@ function RootLayoutNav() {
             presentation: 'modal',
             headerShown: false,
             contentStyle: { backgroundColor: 'black' }
+          }}
+        />
+        <Stack.Screen
+          name="subject/[id]"
+          options={{
+            headerShown: false,
           }}
         />
       </Stack>

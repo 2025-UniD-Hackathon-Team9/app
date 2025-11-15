@@ -37,7 +37,6 @@ export default function TodaySessionCard({
           <MaterialIcons name="local-fire-department" size={28} color={colors.neutral.white} />
           <View>
             <Text style={styles.greeting}>오늘 하루도 화이팅!</Text>
-            <Text style={styles.subject}>{subject} 공부중</Text>
           </View>
         </View>
       </View>
@@ -70,10 +69,6 @@ export default function TodaySessionCard({
         </Svg>
         <View style={styles.circleContent}>
           <Text style={styles.percentageText}>{Math.round(progress * 100)}%</Text>
-          <Text style={styles.completedText}>
-            {completedSessions}/{totalSessions}
-          </Text>
-          <Text style={styles.sessionLabel}>세션</Text>
         </View>
       </View>
 
