@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, ScrollView, Pressable, Animated } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, Animated, Modal, TouchableWithoutFeedback } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { colors } from '@/constants/colors';
@@ -177,13 +177,6 @@ export default function ProblemScreen() {
           })}
         </View>
 
-        {/* Result Message */}
-        {showResult && (
-          <View style={[styles.resultMessage, isCorrect ? styles.resultCorrect : styles.resultWrong]}>
-            <Text style={styles.resultEmoji}>{isCorrect ? '🎉' : '😢'}</Text>
-            <Text style={styles.resultText}>{isCorrect ? '좋아요!' : '오답입니다'}</Text>
-          </View>
-        )}
       </ScrollView>
 
       {/* Bottom Button */}
@@ -215,6 +208,25 @@ export default function ProblemScreen() {
           </Pressable>
         )}
       </View>
+
+      {/* Result Modal */}
+      <Modal
+        visible={showResult}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={handleNext}
+      >
+        <TouchableWithoutFeedback onPress={handleNext}>
+          <View style={styles.modalOverlay}>
+            <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
+              <View style={[styles.resultModal, isCorrect ? styles.resultCorrect : styles.resultWrong]}>
+                <Text style={styles.resultEmoji}>{isCorrect ? '🎉' : '😢'}</Text>
+                <Text style={styles.resultText}>{isCorrect ? '좋아요!' : '오답입니다'}</Text>
+              </View>
+            </TouchableWithoutFeedback>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
     </View>
   );
 }
@@ -370,12 +382,18 @@ const styles = StyleSheet.create({
   optionTextResult: {
     fontWeight: '600',
   },
-  resultMessage: {
-    paddingVertical: 20,
-    paddingHorizontal: 16,
-    borderRadius: 12,
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 20,
+  },
+  resultModal: {
+    paddingVertical: 40,
+    paddingHorizontal: 32,
+    borderRadius: 24,
+    alignItems: 'center',
+    minWidth: 200,
   },
   resultCorrect: {
     backgroundColor: '#E8F5E9',
@@ -384,11 +402,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFEBEE',
   },
   resultEmoji: {
-    fontSize: 40,
-    marginBottom: 8,
+    fontSize: 60,
+    marginBottom: 16,
   },
   resultText: {
-    fontSize: 18,
+    fontSize: 24,
     fontWeight: 'bold',
     color: colors.text.primary,
   },
