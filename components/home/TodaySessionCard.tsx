@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { View, Text, StyleSheet, Animated } from 'react-native';
 import { colors } from '@/constants/colors';
 import { calculateProgress, getMotivationMessage, getProgressEmoji } from '@/src/utils';
 
@@ -13,6 +13,10 @@ interface TodaySessionCardProps {
   totalSessions: number;
   /** 과목 이름 */
   subject: string;
+  /** 로딩 상태 */
+  isLoading?: boolean;
+  /** 처음 진입 여부 */
+  isFirstLoad?: boolean;
 }
 
 /**
@@ -22,15 +26,89 @@ interface TodaySessionCardProps {
 export default function TodaySessionCard({
   completedSessions,
   totalSessions,
-  subject
+  subject,
+  isLoading = false,
+  isFirstLoad = false
 }: TodaySessionCardProps) {
   const progress = calculateProgress(completedSessions, totalSessions);
+  const [showWelcome, setShowWelcome] = useState(isFirstLoad);
+  const fadeAnim = useRef(new Animated.Value(1)).current;
+  const slideAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    // 로딩이 끝나면 웰컴 메시지에서 실제 데이터로 전환
+    if (!isLoading && showWelcome) {
+      // Fade out welcome message
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.timing(slideAnim, {
+          toValue: -20,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+      ]).start(() => {
+        setShowWelcome(false);
+        // Fade in actual data
+        Animated.parallel([
+          Animated.timing(fadeAnim, {
+            toValue: 1,
+            duration: 400,
+            useNativeDriver: true,
+          }),
+          Animated.timing(slideAnim, {
+            toValue: 0,
+            duration: 400,
+            useNativeDriver: true,
+          }),
+        ]).start();
+      });
+    }
+  }, [isLoading, showWelcome]);
+
+  // 웰컴 메시지 표시
+  if (showWelcome) {
+    return (
+      <Animated.View
+        style={[
+          styles.container,
+          styles.welcomeContainer,
+          {
+            opacity: fadeAnim,
+            transform: [{ translateY: slideAnim }]
+          }
+        ]}
+      >
+        <Text style={styles.welcomeEmoji}>👋</Text>
+        <Text style={styles.welcomeTitle}>안녕하세요!</Text>
+        <Text style={styles.welcomeMessage}>
+          수업 후 5분만 투자하면{'\n'}
+          핵심 내용을 완벽하게 기억할 수 있어요
+        </Text>
+        <View style={styles.welcomeDivider} />
+        <Text style={styles.welcomeSubtext}>
+          필기 사진만 올리면 바로 복습 시작!
+        </Text>
+      </Animated.View>
+    );
+  }
 
   return (
-    <View style={styles.container}>
+    <Animated.View
+      style={[
+        styles.container,
+        {
+          opacity: fadeAnim,
+          transform: [{ translateY: slideAnim }]
+        }
+      ]}
+    >
       <View style={styles.header}>
         <View>
-          <Text style={styles.label}>오늘의 학습</Text>
+          <Text style={styles.label}>오늘의 복습</Text>
           <Text style={styles.subject}>{subject}</Text>
         </View>
         <Text style={styles.emoji}>{getProgressEmoji(completedSessions, totalSessions)}</Text>
@@ -41,7 +119,7 @@ export default function TodaySessionCard({
           <Text style={styles.completedNumber}>{completedSessions}</Text>
           <Text style={styles.separator}>/</Text>
           <Text style={styles.totalNumber}>{totalSessions}</Text>
-          <Text style={styles.unit}>문제</Text>
+          <Text style={styles.unit}>세션</Text>
         </View>
 
         <View style={styles.progressBarBackground}>
@@ -55,7 +133,7 @@ export default function TodaySessionCard({
       </View>
 
       <Text style={styles.motivationText}>{getMotivationMessage(completedSessions, totalSessions)}</Text>
-    </View>
+    </Animated.View>
   );
 }
 
@@ -140,5 +218,78 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
     color: colors.text.secondary,
+  },
+  // 스켈레톤 UI 스타일
+  skeletonLabel: {
+    width: 80,
+    height: 14,
+    borderRadius: 4,
+    backgroundColor: colors.neutral.gray200,
+    marginBottom: 4,
+  },
+  skeletonSubject: {
+    width: 120,
+    height: 24,
+    borderRadius: 6,
+    backgroundColor: colors.neutral.gray200,
+  },
+  skeletonEmoji: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.neutral.gray200,
+  },
+  skeletonNumber: {
+    width: 100,
+    height: 40,
+    borderRadius: 8,
+    backgroundColor: colors.neutral.gray200,
+  },
+  skeletonProgressBar: {
+    height: 12,
+    borderRadius: 100,
+    backgroundColor: colors.neutral.gray200,
+  },
+  skeletonMotivation: {
+    width: 180,
+    height: 15,
+    borderRadius: 4,
+    backgroundColor: colors.neutral.gray200,
+  },
+  // 웰컴 메시지 스타일
+  welcomeContainer: {
+    alignItems: 'center',
+    paddingVertical: 32,
+  },
+  welcomeEmoji: {
+    fontSize: 48,
+    marginBottom: 16,
+  },
+  welcomeTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: colors.text.primary,
+    marginBottom: 12,
+    letterSpacing: -0.8,
+  },
+  welcomeMessage: {
+    fontSize: 16,
+    color: colors.text.secondary,
+    textAlign: 'center',
+    lineHeight: 24,
+    marginBottom: 20,
+  },
+  welcomeDivider: {
+    width: 40,
+    height: 3,
+    backgroundColor: colors.primary[500],
+    borderRadius: 2,
+    marginBottom: 16,
+  },
+  welcomeSubtext: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.primary[500],
+    textAlign: 'center',
   },
 });

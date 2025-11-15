@@ -1,9 +1,9 @@
-import { View, Text, StyleSheet, Pressable, Image, ScrollView, Alert } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Image, ScrollView, Alert, Animated } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { colors } from '@/constants/colors';
 import { SUBJECT_THEME_PALETTE } from '@/src/constants';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { getCourses } from '@/src/api/courses';
 import { processDocument } from '@/src/api/documents';
@@ -17,10 +17,35 @@ export default function SubjectSelectScreen() {
   const [isUploading, setIsUploading] = useState(false);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [isLoadingSubjects, setIsLoadingSubjects] = useState(true);
+  const shimmerAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     loadCourses();
   }, [user]);
+
+  useEffect(() => {
+    if (isLoadingSubjects) {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(shimmerAnim, {
+            toValue: 1,
+            duration: 1000,
+            useNativeDriver: true,
+          }),
+          Animated.timing(shimmerAnim, {
+            toValue: 0,
+            duration: 1000,
+            useNativeDriver: true,
+          }),
+        ])
+      ).start();
+    }
+  }, [isLoadingSubjects]);
+
+  const shimmerOpacity = shimmerAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.3, 1],
+  });
 
   const loadCourses = async () => {
     if (!user) return;
@@ -66,8 +91,8 @@ export default function SubjectSelectScreen() {
       );
 
       Alert.alert(
-        '업로드 완료',
-        `문제가 생성되었습니다.\n문제 수: ${result.questionCount}개`,
+        '준비 완료!',
+        `${result.questionCount}개 문제로 빠르게 복습해보세요`,
         [
           {
             text: '확인',
@@ -112,17 +137,22 @@ export default function SubjectSelectScreen() {
 
         {/* 과목 선택 */}
         <View style={styles.subjectSection}>
-          <Text style={styles.sectionTitle}>어떤 과목인가요?</Text>
-          <Text style={styles.sectionSubtitle}>촬영한 내용에 해당하는 과목을 선택하세요</Text>
+          <Text style={styles.sectionTitle}>어떤 과목 복습인가요?</Text>
+          <Text style={styles.sectionSubtitle}>필기한 과목을 선택해주세요</Text>
 
           {isLoadingSubjects ? (
-            <View style={styles.loadingContainer}>
-              <Text style={styles.loadingText}>과목 불러오는 중...</Text>
+            <View style={styles.subjectGrid}>
+              {[1, 2, 3, 4].map((index) => (
+                <View key={index} style={styles.skeletonCard}>
+                  <Animated.View style={[styles.skeletonIconContainer, { opacity: shimmerOpacity }]} />
+                  <Animated.View style={[styles.skeletonText, { opacity: shimmerOpacity }]} />
+                </View>
+              ))}
             </View>
           ) : subjects.length === 0 ? (
             <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>등록된 과목이 없습니다.</Text>
-              <Text style={styles.emptySubtext}>홈 화면에서 과목을 추가해주세요.</Text>
+              <Text style={styles.emptyText}>등록된 과목이 없어요</Text>
+              <Text style={styles.emptySubtext}>홈에서 과목을 추가하고 빠르게 복습하세요</Text>
             </View>
           ) : (
             <View style={styles.subjectGrid}>
@@ -331,5 +361,28 @@ const styles = StyleSheet.create({
   emptySubtext: {
     fontSize: 14,
     color: colors.text.secondary,
+  },
+  // 스켈레톤 UI 스타일
+  skeletonCard: {
+    width: '47%',
+    backgroundColor: colors.neutral.gray100,
+    borderRadius: 16,
+    padding: 20,
+    alignItems: 'center',
+    gap: 12,
+    borderWidth: 2,
+    borderColor: colors.neutral.gray100,
+  },
+  skeletonIconContainer: {
+    width: 60,
+    height: 60,
+    borderRadius: 16,
+    backgroundColor: colors.neutral.gray200,
+  },
+  skeletonText: {
+    width: 80,
+    height: 16,
+    borderRadius: 4,
+    backgroundColor: colors.neutral.gray200,
   },
 });

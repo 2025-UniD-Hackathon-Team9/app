@@ -10,16 +10,16 @@ import type { Subject } from '@/src/types';
  * 백엔드에서 받은 과목 인덱스에 따라 순환하며 할당됨
  */
 export const SUBJECT_THEME_PALETTE = [
-  { icon: '📐', color: colors.primary[500] },
-  { icon: '⚛️', color: '#FF6B6B' },
-  { icon: '🧪', color: '#4ECDC4' },
+  { icon: '⚙️', color: colors.primary[500] },      // 운영체제 - 톱니바퀴
+  { icon: '🧮', color: '#FF6B6B' },                // 알고리즘 - 주판
+  { icon: '🗄️', color: '#4ECDC4' },                // 데이터베이스 - 파일 캐비닛
   { icon: '📚', color: '#95E1D3' },
   { icon: '✏️', color: '#F38181' },
   { icon: '🎨', color: '#FF9F43' },
   { icon: '🎵', color: '#54A0FF' },
   { icon: '⚽', color: '#5F27CD' },
   { icon: '🌍', color: '#00D2D3' },
-  { icon: '💻', color: '#1DD1A1' },
+  { icon: '💡', color: '#1DD1A1' },
 ];
 
 /**

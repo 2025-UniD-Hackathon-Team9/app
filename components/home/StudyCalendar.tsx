@@ -60,7 +60,7 @@ export default function StudyCalendar({ studyRecords, currentMonth }: StudyCalen
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>활동</Text>
+        <Text style={styles.title}>복습 캘린더</Text>
         <Text style={styles.monthName}>{monthName}</Text>
       </View>
 

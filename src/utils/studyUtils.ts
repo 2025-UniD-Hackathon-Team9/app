@@ -35,11 +35,11 @@ export function calculateProgress(completed: number, total: number): number {
  */
 export function getMotivationMessage(completed: number, total: number): string {
   const progress = calculateProgress(completed, total);
-  
-  if (completed === 0) return '오늘도 화이팅! 🎯';
-  if (progress < 0.5) return '좋아요! 계속 가볼까요? 💪';
-  if (progress < 1) return '거의 다 왔어요! 🔥';
-  return '완벽해요! 🎉';
+
+  if (completed === 0) return '수업 후 5분 복습으로 기억력 UP! 🎯';
+  if (progress < 0.5) return '빠른 복습으로 시간 절약! 💪';
+  if (progress < 1) return '조금만 더! 오늘 복습 마무리 🔥';
+  return '오늘 복습 완료! 내일도 화이팅 🎉';
 }
 
 /**

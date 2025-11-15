@@ -3,8 +3,8 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '@/constants/colors';
-import { useState, useEffect } from 'react';
-import { getSession, submitSession, type SessionQuestion, type SessionAnswer } from '@/src/api/sessions';
+import { useState, useEffect, useRef } from 'react';
+import { getSession, submitSingleQuestion, type SessionQuestion } from '@/src/api/sessions';
 import { getCourses } from '@/src/api/courses';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { SUBJECT_THEME_PALETTE } from '@/src/constants';
@@ -29,6 +29,33 @@ export default function ProblemScreen() {
   const [showResult, setShowResult] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
   const [correctAnswer, setCorrectAnswer] = useState<string>('');
+
+  // Shimmer animation
+  const shimmerAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (isLoading) {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(shimmerAnim, {
+            toValue: 1,
+            duration: 1000,
+            useNativeDriver: true,
+          }),
+          Animated.timing(shimmerAnim, {
+            toValue: 0,
+            duration: 1000,
+            useNativeDriver: true,
+          }),
+        ])
+      ).start();
+    }
+  }, [isLoading]);
+
+  const shimmerOpacity = shimmerAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.3, 1],
+  });
 
   const handleQuit = () => {
     router.back();
@@ -75,8 +102,42 @@ export default function ProblemScreen() {
 
   if (isLoading) {
     return (
-      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
-        <Text style={styles.problemCounter}>로딩 중...</Text>
+      <View style={styles.container}>
+        <StatusBar barStyle="dark-content" />
+
+        {/* Header Skeleton */}
+        <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
+          <View style={styles.headerTop}>
+            <Animated.View style={[styles.skeletonQuitButton, { opacity: shimmerOpacity }]} />
+            <Animated.View style={[styles.skeletonCounter, { opacity: shimmerOpacity }]} />
+            <View style={styles.placeholder} />
+          </View>
+          <View style={styles.progressBarBackground}>
+            <Animated.View style={[styles.skeletonProgressBar, { opacity: shimmerOpacity }]} />
+          </View>
+        </View>
+
+        {/* Content Skeleton */}
+        <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>
+          {/* Question Section Skeleton */}
+          <View style={styles.questionSection}>
+            <Animated.View style={[styles.skeletonBadge, { opacity: shimmerOpacity }]} />
+            <Animated.View style={[styles.skeletonQuestion, { opacity: shimmerOpacity }]} />
+            <Animated.View style={[styles.skeletonQuestion, { width: '80%', marginTop: 8, opacity: shimmerOpacity }]} />
+          </View>
+
+          {/* Options Skeleton */}
+          <View style={styles.optionsSection}>
+            {[1, 2, 3, 4].map((item) => (
+              <Animated.View key={item} style={[styles.skeletonOption, { opacity: shimmerOpacity }]} />
+            ))}
+          </View>
+        </ScrollView>
+
+        {/* Bottom Button Skeleton */}
+        <View style={[styles.bottomSection, { paddingBottom: insets.bottom + 16 }]}>
+          <Animated.View style={[styles.skeletonButton, { opacity: shimmerOpacity }]} />
+        </View>
       </View>
     );
   }
@@ -97,10 +158,10 @@ export default function ProblemScreen() {
         </View>
         <View style={[styles.emptyContainer, { paddingTop: insets.top }]}>
           <Text style={styles.emptyIcon}>📝</Text>
-          <Text style={styles.emptyTitle}>문제가 없습니다</Text>
+          <Text style={styles.emptyTitle}>복습 문제가 없어요</Text>
           <Text style={styles.emptyDescription}>
-            이 세션에 문제가 아직 생성되지 않았습니다.{'\n'}
-            PDF를 업로드하여 문제를 생성하세요.
+            필기나 교재 사진을 올려서{'\n'}
+            빠르게 복습 문제를 만들어보세요
           </Text>
           <Pressable
             onPress={handleQuit}
@@ -140,19 +201,25 @@ export default function ProblemScreen() {
     newAnswers.set(currentProblem.id, userAnswer);
     setAnswers(newAnswers);
 
-    // 현재 문제만 제출하여 정답 확인
+    // 개별 문제 채점 API 호출
     try {
-      const singleAnswer: SessionAnswer[] = [{
-        session_question_id: currentProblem.id,
-        user_answer: userAnswer,
-      }];
+      console.log('[Problem] Submitting answer:', {
+        sessionId: parseInt(sessionId),
+        questionId: currentProblem.id,
+        userAnswer
+      });
 
-      const result = await submitSession(parseInt(sessionId), singleAnswer);
-      const currentResult = result.results[0];
+      const result = await submitSingleQuestion(
+        parseInt(sessionId),
+        currentProblem.id,
+        userAnswer
+      );
+
+      console.log('[Problem] Submit result:', result);
 
       // 결과 표시
-      setIsCorrect(currentResult.correct);
-      setCorrectAnswer(currentResult.real_answer || '');
+      setIsCorrect(result.correct);
+      setCorrectAnswer(result.realAnswer || '');
       setShowResult(true);
     } catch (error) {
       console.error('Failed to submit answer:', error);
@@ -160,12 +227,21 @@ export default function ProblemScreen() {
     }
   };
 
+  const handleRetry = () => {
+    // 현재 문제 다시 풀기
+    setSelectedOption(null);
+    setTextAnswer('');
+    setShowResult(false);
+    setIsCorrect(false);
+    setCorrectAnswer('');
+  };
+
   const handleContinue = () => {
     // 다음 문제로 이동 또는 완료
     if (currentProblemIndex === problems.length - 1) {
       Alert.alert(
-        '완료',
-        '모든 문제를 풀었습니다!',
+        '복습 완료! 🎉',
+        '오늘 복습 끝! 수고했어요',
         [{ text: '확인', onPress: () => router.back() }]
       );
     } else {
@@ -350,7 +426,7 @@ export default function ProblemScreen() {
               {isCorrect ? '🎉' : '💡'}
             </Text>
             <Text style={styles.resultText}>
-              {isCorrect ? '정답입니다!' : '아쉽네요! 다음 기회에 도전하세요.'}
+              {isCorrect ? '정답! 완벽하게 이해했어요' : '틀렸지만 괜찮아요! 복습으로 기억하세요'}
             </Text>
           </View>
         )}
@@ -376,7 +452,7 @@ export default function ProblemScreen() {
           >
             <Text style={styles.submitButtonText}>확인</Text>
           </Pressable>
-        ) : (
+        ) : isCorrect ? (
           <Pressable
             onPress={handleContinue}
             style={({ pressed }) => [
@@ -389,6 +465,32 @@ export default function ProblemScreen() {
               {currentProblemIndex === problems.length - 1 ? '완료' : '다음 문제'}
             </Text>
           </Pressable>
+        ) : (
+          <View style={styles.buttonRow}>
+            <Pressable
+              onPress={handleRetry}
+              style={({ pressed }) => [
+                styles.retryButton,
+                pressed && { opacity: 0.85 },
+              ]}
+            >
+              <MaterialIcons name="refresh" size={20} color={colors.neutral.white} />
+              <Text style={styles.submitButtonText}>다시 풀기</Text>
+            </Pressable>
+            <Pressable
+              onPress={handleContinue}
+              style={({ pressed }) => [
+                styles.submitButton,
+                styles.continueButton,
+                { flex: 1 },
+                pressed && { opacity: 0.85 },
+              ]}
+            >
+              <Text style={styles.submitButtonText}>
+                {currentProblemIndex === problems.length - 1 ? '완료' : '다음 문제'}
+              </Text>
+            </Pressable>
+          </View>
         )}
       </View>
     </View>
@@ -648,5 +750,61 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 8,
     right: 8,
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  retryButton: {
+    flex: 1,
+    flexDirection: 'row',
+    gap: 8,
+    paddingVertical: 16,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.neutral.gray600,
+  },
+  // Skeleton UI styles
+  skeletonQuitButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.neutral.gray200,
+  },
+  skeletonCounter: {
+    width: 60,
+    height: 20,
+    borderRadius: 6,
+    backgroundColor: colors.neutral.gray200,
+  },
+  skeletonProgressBar: {
+    height: '100%',
+    width: '30%',
+    borderRadius: 3,
+    backgroundColor: colors.neutral.gray200,
+  },
+  skeletonBadge: {
+    width: 100,
+    height: 28,
+    borderRadius: 8,
+    backgroundColor: colors.neutral.gray200,
+    marginBottom: 20,
+  },
+  skeletonQuestion: {
+    height: 24,
+    borderRadius: 6,
+    backgroundColor: colors.neutral.gray200,
+    marginBottom: 4,
+  },
+  skeletonOption: {
+    height: 60,
+    borderRadius: 16,
+    backgroundColor: colors.neutral.gray100,
+  },
+  skeletonButton: {
+    height: 56,
+    borderRadius: 16,
+    backgroundColor: colors.neutral.gray200,
   },
 });

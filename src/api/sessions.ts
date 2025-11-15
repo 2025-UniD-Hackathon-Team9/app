@@ -64,6 +64,17 @@ export interface SessionHistory {
 }
 
 /**
+ * 오늘의 세션 타입
+ */
+export interface RecentSession {
+  sessionId: number;
+  createdAt: string;
+  keywords: string;
+  courseId: number;
+  courseTitle: string;
+}
+
+/**
  * 세션 문제 조회
  */
 export async function getSession(sessionId: number): Promise<SessionDetail> {
@@ -90,4 +101,40 @@ export async function getSessionHistory(
   courseId: number
 ): Promise<SessionHistory[]> {
   return apiClient.get<SessionHistory[]>(`/api/sessions?user_id=${userId}&course_id=${courseId}`);
+}
+
+/**
+ * 오늘의 최근 세션 조회 (5개)
+ */
+export async function getRecentSessions(userId: number): Promise<RecentSession[]> {
+  return apiClient.get<RecentSession[]>(`/api/sessions/recent?user_id=${userId}`);
+}
+
+/**
+ * 개별 문제 답안 제출 타입
+ */
+export interface SingleQuestionAnswer {
+  userAnswer: string;
+}
+
+/**
+ * 개별 문제 채점 결과 타입
+ */
+export interface SingleQuestionResult {
+  correct: boolean;
+  realAnswer: string | null;
+}
+
+/**
+ * 개별 문제 답안 제출 및 채점
+ */
+export async function submitSingleQuestion(
+  sessionId: number,
+  questionId: number,
+  userAnswer: string
+): Promise<SingleQuestionResult> {
+  return apiClient.post<SingleQuestionResult>(
+    `/api/sessions/${sessionId}/questions/${questionId}/submit`,
+    { userAnswer }
+  );
 }

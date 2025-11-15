@@ -30,9 +30,9 @@ export default function CameraScreen() {
               <MaterialIcons name="photo-camera" size={48} color={colors.primary[500]} />
             </View>
 
-            <Text style={styles.permissionTitle}>카메라 접근 권한</Text>
+            <Text style={styles.permissionTitle}>카메라 권한 필요</Text>
             <Text style={styles.permissionDescription}>
-              필기 내용을 촬영하여{'\n'}학습 자료로 활용합니다
+              수업 필기를 찍어서{'\n'}5분만에 복습 끝내기
             </Text>
 
             <Pressable style={styles.permissionButton} onPress={requestPermission}>

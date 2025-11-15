@@ -5,19 +5,16 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { colors } from '@/constants/colors';
 import { AVAILABLE_SUBJECT_ICONS, AVAILABLE_SUBJECT_COLORS } from '@/src/constants';
 import { useState } from 'react';
+import { createCourse } from '@/src/api/courses';
 import { useAuth } from '@/src/contexts/AuthContext';
-import { useCourses } from '@/src/hooks';
-import { validateTextField } from '@/src/utils/validation';
 
 export default function AddSubjectScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
-  const { addCourse } = useCourses(user?.user_id);
   const [subjectName, setSubjectName] = useState('');
   const [selectedIcon, setSelectedIcon] = useState(AVAILABLE_SUBJECT_ICONS[0]);
   const [selectedColor, setSelectedColor] = useState(AVAILABLE_SUBJECT_COLORS[0]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSave = async () => {
     if (!user) {
@@ -25,32 +22,23 @@ export default function AddSubjectScreen() {
       return;
     }
 
-    // 입력 검증
-    const validation = validateTextField(subjectName, '과목 이름', 1, 20);
-    if (!validation.isValid) {
-      Alert.alert('입력 오류', validation.error);
-      return;
-    }
-
-    setIsSubmitting(true);
     try {
-      await addCourse({
+      const result = await createCourse({
         user_id: user.user_id,
-        title: subjectName.trim(),
+        title: subjectName,
       });
 
+      console.log('Course created:', result);
       Alert.alert('성공', '과목이 추가되었습니다.', [
         { text: '확인', onPress: () => router.back() }
       ]);
     } catch (error) {
       console.error('Failed to create course:', error);
       Alert.alert('오류', '과목 추가에 실패했습니다.');
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
-  const canSave = subjectName.trim().length > 0 && !isSubmitting;
+  const canSave = subjectName.trim().length > 0;
 
   return (
     <View style={styles.container}>
@@ -71,7 +59,7 @@ export default function AddSubjectScreen() {
           <Text style={styles.sectionTitle}>과목 이름</Text>
           <TextInput
             style={styles.input}
-            placeholder="예: 미적분학, 세계사 등"
+            placeholder="예: 미적분학, 운영체제, 세계사"
             placeholderTextColor={colors.text.disabled}
             value={subjectName}
             onChangeText={setSubjectName}

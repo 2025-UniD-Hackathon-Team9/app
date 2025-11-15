@@ -76,7 +76,7 @@ export default function SideDrawer({ isOpen, onClose }: SideDrawerProps) {
             <View style={styles.headerTop}>
               <View>
                 <Text style={styles.headerTitle}>과목 선택</Text>
-                <Text style={styles.headerSubtitle}>학습할 과목을 선택하세요</Text>
+                <Text style={styles.headerSubtitle}>복습할 과목을 선택하세요</Text>
               </View>
               <Pressable style={styles.closeButton} onPress={onClose}>
                 <MaterialIcons name="close" size={24} color={colors.text.primary} />

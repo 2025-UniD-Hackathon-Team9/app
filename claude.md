@@ -29,13 +29,12 @@
 | **Users** | GET | /users/:id | User 정보 조회 | O | ❌ |
 | **Courses** | POST | /courses | 과목 생성 | O | ❌ |
 | **Courses** | GET | /courses?user_id=1 | user_id 기준 과목 목록 조회 | O | ❌ |
-| **Documents** | POST | /api/documents/process | PDF 업로드 | ❌ | ❌ |
-|  |  |  |  |  |  |
-|  |  |  |  |  |  |
-|  |  |  |  |  |  |
-| **Sessions** | GET | /sessions/:id | 세션 문제 조회 | ❌ | ❌ |
-| **Sessions** | POST | /sessions/:id/submit | 세션 전체 제출 및 채점 | ❌ | ❌ |
-| **Sessions** | GET | /sessions?user_id=1&course_id=10 | 세션 기록 조회 | ❌ | ❌ |
+| **Documents** | POST | /api/documents/process | PDF 업로드 | O | ❌ |
+| **Sessions** | GET | /api/sessions/:id | 세션 문제 조회 | O | ❌ |
+| **Sessions** | POST | /api/sessions/:id/submit | 세션 전체 제출 및 채점 | O | ❌ |
+| **Sessions** | GET | /api/sessions?user_id=1&course_id=1 | 세션 기록 조회 | O | ❌ |
+| **Sessions** | GET | api/sessions/recent?user_id=1 | 오늘의 세션(5개) 조회 | O | ❌ |
+| **Sessions** | POST | /api/sessions/{sessionId}/questions/{questionId}/submit | 개별 채점 | O | ❌ |
 
 # 📌 **0. Auth Domain (회원가입 & 로그인)**
 
@@ -191,39 +190,125 @@ JWT 없이 간단 로그인 → user_id만 반환
 
 ```json
 {
-  "session_id": 100,
-  "course_id": 10,
-  "status": "InProgress",
-  "questions": [
-    {
-      "id": 1,
-      "item_order": 1,
-      "type": "mcq",
-      "question_text": "프로세스란 무엇인가?",
-      "options": ["프로그램", "실행 중인 프로그램", "데이터 구조"]
-    },
-    {
-      "id": 2,
-      "item_order": 2,
-      "type": "short",
-      "question_text": "PCB에 포함되는 정보를 적으시오."
-    }
-  ]
+    "session_id": 9,
+    "course_id": 1,
+    "status": "InProgress",
+    "questions": [
+        {
+            "id": 64,
+            "item_order": 1,
+            "type": "객관식",
+            "question_text": "선비의 책임의식을 강조한 구절은?",
+            "options": [
+                "\"임중도원\"",
+                "\"홍의\"",
+                "\"세한도\"",
+                "\"시중\""
+            ]
+        },
+        {
+            "id": 65,
+            "item_order": 2,
+            "type": "객관식",
+            "question_text": "추사 김정희의 작품으로 선비의 지조를 상징하는 그림은?",
+            "options": [
+                "\"세한도\"",
+                "\"임중도원\"",
+                "\"홍의\"",
+                "\"시중\""
+            ]
+        },
+        {
+            "id": 66,
+            "item_order": 3,
+            "type": "객관식",
+            "question_text": "군자가 의리를 추구할 때 중시하는 자세는?",
+            "options": [
+                "\"시중\"",
+                "\"홍의\"",
+                "\"견리사의\"",
+                "\"임중도원\""
+            ]
+        },
+        {
+            "id": 67,
+            "item_order": 4,
+            "type": "단답식",
+            "question_text": "이익을 볼 때 의로움을 생각하는 자세는?",
+            "options": null
+        },
+        {
+            "id": 68,
+            "item_order": 5,
+            "type": "단답식",
+            "question_text": "선비가 갖춰야 할 넓은 마음과 굳센 의지를 뜻하는 단어는?",
+            "options": null
+        },
+        {
+            "id": 69,
+            "item_order": 6,
+            "type": "OX",
+            "question_text": "임중도원은 선비의 도량이 넓고 뜻이 굳세어야 함을 강조한다. (O/X)",
+            "options": null
+        },
+        {
+            "id": 70,
+            "item_order": 7,
+            "type": "OX",
+            "question_text": "'인'은 사람의 편안한 거처이고 '의'는 사람의 바른 길이라고 했다. (O/X)",
+            "options": null
+        },
+        {
+            "id": 71,
+            "item_order": 8,
+            "type": "객관식",
+            "question_text": "소인이 용맹은 있으나 의가 없으면 어떤 존재가 되는가?",
+            "options": [
+                "\"도둑\"",
+                "\"혼란\"",
+                "\"군자\"",
+                "\"선비\""
+            ]
+        },
+        {
+            "id": 72,
+            "item_order": 9,
+            "type": "단답식",
+            "question_text": "군자가 세상을 대할 때 의를 가까이 하는 자세는?",
+            "options": null
+        },
+        {
+            "id": 73,
+            "item_order": 10,
+            "type": "OX",
+            "question_text": "세한도는 추운 날씨에 소나무와 잣나무가 시드는 모습을 그린 그림이다. (O/X)",
+            "options": null
+        }
+    ]
 }
-
 ```
 
 ---
 
 ## **POST /sessions/:sessionId/submit — 세션 답 전체 제출**
 
+completed는 다 제출했는지 여부
+
 ### ✔ Request
 
 ```json
 {
   "answers": [
-    { "session_question_id": 1, "user_answer": "실행 중인 프로그램" },
-    { "session_question_id": 2, "user_answer": "프로세스 상태 등" }
+    { "session_question_id": 64, "user_answer": "책임이 무겁고 길이 멀다" },
+    { "session_question_id": 65, "user_answer": "책임이 무겁고 길이 멀다" },
+    { "session_question_id": 66, "user_answer": "시중" },
+    { "session_question_id": 67, "user_answer": "견리사의" },
+    { "session_question_id": 68, "user_answer": "ㅁㅁ" },
+    { "session_question_id": 69, "user_answer": "X" },
+    { "session_question_id": 70, "user_answer": "O" },
+    { "session_question_id": 71, "user_answer": "도둑" },
+    { "session_question_id": 72, "user_answer": "시중" },
+    { "session_question_id": 73, "user_answer": "X" }
   ]
 }
 
@@ -233,44 +318,121 @@ JWT 없이 간단 로그인 → user_id만 반환
 
 ```json
 {
-  "session_id": 100,
-  "score": 50,
-  "isCompleted": false,
-  "results": [
-    {
-      "question_id": 1,
-      "correct": true
-    },
-    {
-      "question_id": 2,
-      "correct": false,
-      "real_answer": "프로세스 상태"
-    }
-  ]
+    "session_id": 9,
+    "score": 70,
+    "results": [
+        {
+            "question_id": 64,
+            "correct": false,
+            "real_answer": "임중도원"
+        },
+        {
+            "question_id": 65,
+            "correct": false,
+            "real_answer": "세한도"
+        },
+        {
+            "question_id": 66,
+            "correct": true,
+            "real_answer": null
+        },
+        {
+            "question_id": 67,
+            "correct": true,
+            "real_answer": null
+        },
+        {
+            "question_id": 68,
+            "correct": false,
+            "real_answer": "홍의"
+        },
+        {
+            "question_id": 69,
+            "correct": true,
+            "real_answer": null
+        },
+        {
+            "question_id": 70,
+            "correct": true,
+            "real_answer": null
+        },
+        {
+            "question_id": 71,
+            "correct": true,
+            "real_answer": null
+        },
+        {
+            "question_id": 72,
+            "correct": true,
+            "real_answer": null
+        },
+        {
+            "question_id": 73,
+            "correct": true,
+            "real_answer": null
+        }
+    ],
+    "completed": true
 }
 ```
 
 ---
 
-## **GET /sessions?user_id=1&course_id=10 — 세션 히스토리**
+## **GET /sessions?user_id=1&course_id=1 — 세션 히스토리**
 
 ### ✔ Response
 
 ```json
 [
-  {
-    "id": 100,
-    "status": "Completed",
-    "created_at": "2025-01-01"
-  },
-  {
-    "id": 101,
-    "status": "Completed",
-    "created_at": "2025-01-02"
-  }
+    {
+        "id": 9,
+        "status": "Completed",
+        "created_at": "2025-11-15 17:26:51.0"
+    },
+    {
+        "id": 8,
+        "status": "InProgress",
+        "created_at": "2025-11-15 17:25:15.0"
+    },
+    {
+        "id": 7,
+        "status": "InProgress",
+        "created_at": "2025-11-15 17:22:45.0"
+    },
+    {
+        "id": 6,
+        "status": "InProgress",
+        "created_at": "2025-11-15 17:19:47.0"
+    },
+    {
+        "id": 5,
+        "status": "InProgress",
+        "created_at": "2025-11-15 17:17:06.0"
+    },
+    {
+        "id": 4,
+        "status": "InProgress",
+        "created_at": "2025-11-15 17:14:25.0"
+    },
+    {
+        "id": 3,
+        "status": "InProgress",
+        "created_at": "2025-11-15 17:11:53.0"
+    },
+    {
+        "id": 2,
+        "status": "InProgress",
+        "created_at": "2025-11-15 17:01:38.0"
+    },
+    {
+        "id": 1,
+        "status": "InProgress",
+        "created_at": "2025-11-15 16:59:12.0"
+    }
 ]
-
 ```
+
+---
 
 ## **GET /sessions/recent?user_id=1 — 오늘의 세션 5개**
 
@@ -315,3 +477,45 @@ JWT 없이 간단 로그인 → user_id만 반환
     }
 ]
 ```
+
+---
+
+## **POST /sessions/{sessionId}/questions/{questionId}/submit**
+
+### ■ Path Parameters
+
+| 이름 | 타입 | 설명 |
+| --- | --- | --- |
+| `sessionId` | Long | 세션 ID |
+| `questionId` | Long | 문제 ID |
+
+### Request Body (JSON)
+
+```json
+{
+  "userAnswer": "사용자가 입력한 답"
+}
+
+```
+
+### Response (정답)
+
+```json
+{
+  "correct": true,
+  "realAnswer": null
+}
+
+```
+
+### Response (오답)
+
+```json
+{
+  "correct": false,
+  "realAnswer": "실제 정답"
+}
+
+```
+
+---

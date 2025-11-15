@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, ScrollView, Pressable, StatusBar } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, StatusBar, Animated } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -7,7 +7,7 @@ import { SUBJECT_THEME_PALETTE } from '@/src/constants';
 import type { StudyRecord } from '@/src/types';
 import { getActivityColor } from '@/src/utils';
 import { getDayOfWeek, getActivityLevel } from '@/src/utils';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { getCourses } from '@/src/api/courses';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { getSessionHistory, type SessionHistory } from '@/src/api/sessions';
@@ -25,6 +25,8 @@ export default function SubjectScreen() {
   });
   const [isLoading, setIsLoading] = useState(true);
   const [sessions, setSessions] = useState<SessionHistory[]>([]);
+  const shimmerAnim = useRef(new Animated.Value(0)).current;
+  const shakeAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     if (user) {
@@ -32,6 +34,30 @@ export default function SubjectScreen() {
       loadSessions();
     }
   }, [user, id]);
+
+  useEffect(() => {
+    if (isLoading) {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(shimmerAnim, {
+            toValue: 1,
+            duration: 1000,
+            useNativeDriver: true,
+          }),
+          Animated.timing(shimmerAnim, {
+            toValue: 0,
+            duration: 1000,
+            useNativeDriver: true,
+          }),
+        ])
+      ).start();
+    }
+  }, [isLoading]);
+
+  const shimmerOpacity = shimmerAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.3, 1],
+  });
 
   const loadCourse = async () => {
     if (!user) return;
@@ -103,6 +129,54 @@ export default function SubjectScreen() {
 
   const activityData = getRecentActivityData();
 
+  const triggerShake = () => {
+    // iOS 스타일 흔들림 애니메이션 - 가속도가 있는 자연스러운 흔들림
+    Animated.sequence([
+      Animated.timing(shakeAnim, {
+        toValue: 10,
+        duration: 50,
+        easing: Animated.easeOut,
+        useNativeDriver: true,
+      }),
+      Animated.timing(shakeAnim, {
+        toValue: -10,
+        duration: 50,
+        easing: Animated.easeInOut,
+        useNativeDriver: true,
+      }),
+      Animated.timing(shakeAnim, {
+        toValue: 8,
+        duration: 50,
+        easing: Animated.easeInOut,
+        useNativeDriver: true,
+      }),
+      Animated.timing(shakeAnim, {
+        toValue: -8,
+        duration: 50,
+        easing: Animated.easeInOut,
+        useNativeDriver: true,
+      }),
+      Animated.timing(shakeAnim, {
+        toValue: 5,
+        duration: 50,
+        easing: Animated.easeInOut,
+        useNativeDriver: true,
+      }),
+      Animated.timing(shakeAnim, {
+        toValue: -5,
+        duration: 50,
+        easing: Animated.easeInOut,
+        useNativeDriver: true,
+      }),
+      Animated.timing(shakeAnim, {
+        toValue: 0,
+        duration: 50,
+        easing: Animated.easeIn,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
   if (isLoading) {
     return (
       <ScrollView style={styles.container}>
@@ -115,20 +189,20 @@ export default function SubjectScreen() {
 
           {/* 타이틀 섹션 스켈레톤 */}
           <View style={styles.titleSection}>
-            <View style={styles.skeletonIconContainer} />
+            <Animated.View style={[styles.skeletonIconContainer, { opacity: shimmerOpacity }]} />
             <View style={styles.titleTextContainer}>
-              <View style={styles.skeletonTitle} />
+              <Animated.View style={[styles.skeletonTitle, { opacity: shimmerOpacity }]} />
             </View>
           </View>
 
           {/* 주간 활동 그래프 스켈레톤 */}
           <View style={styles.activitySection}>
-            <View style={styles.skeletonSectionTitle} />
+            <Animated.View style={[styles.skeletonSectionTitle, { opacity: shimmerOpacity }]} />
             <View style={styles.activityGrid}>
               {[1, 2, 3, 4, 5, 6, 7].map((index) => (
                 <View key={index} style={styles.activityDayContainer}>
-                  <View style={styles.skeletonActivityDay} />
-                  <View style={styles.skeletonDayLabel} />
+                  <Animated.View style={[styles.skeletonActivityDay, { opacity: shimmerOpacity }]} />
+                  <Animated.View style={[styles.skeletonDayLabel, { opacity: shimmerOpacity }]} />
                 </View>
               ))}
             </View>
@@ -137,21 +211,21 @@ export default function SubjectScreen() {
 
         <View style={styles.content}>
           <View style={styles.section}>
-            <View style={styles.skeletonSectionTitle} />
-            <View style={styles.skeletonCard} />
+            <Animated.View style={[styles.skeletonSectionTitle, { opacity: shimmerOpacity }]} />
+            <Animated.View style={[styles.skeletonCard, { opacity: shimmerOpacity }]} />
           </View>
 
           <View style={styles.section}>
-            <View style={styles.skeletonSectionTitle} />
+            <Animated.View style={[styles.skeletonSectionTitle, { opacity: shimmerOpacity }]} />
             <View style={styles.statsGrid}>
-              <View style={styles.skeletonStatCard} />
-              <View style={styles.skeletonStatCard} />
+              <Animated.View style={[styles.skeletonStatCard, { opacity: shimmerOpacity }]} />
+              <Animated.View style={[styles.skeletonStatCard, { opacity: shimmerOpacity }]} />
             </View>
           </View>
 
           <View style={styles.section}>
-            <View style={styles.skeletonSectionTitle} />
-            <View style={styles.skeletonCard} />
+            <Animated.View style={[styles.skeletonSectionTitle, { opacity: shimmerOpacity }]} />
+            <Animated.View style={[styles.skeletonCard, { opacity: shimmerOpacity }]} />
           </View>
         </View>
       </ScrollView>
@@ -179,7 +253,7 @@ export default function SubjectScreen() {
 
         {/* 주간 활동 그래프 */}
         <View style={styles.activitySection}>
-          <Text style={styles.activitySectionTitle}>최근 7일 활동</Text>
+          <Text style={styles.activitySectionTitle}>이번 주 복습 기록</Text>
           <View style={styles.activityGrid}>
             {activityData.map((day, index) => {
               const level = getActivityLevel(day.sessionsCompleted);
@@ -217,7 +291,7 @@ export default function SubjectScreen() {
 
       <View style={styles.content}>
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>최근 학습 내용</Text>
+          <Text style={styles.sectionTitle}>복습 기록</Text>
           {sessions.length > 0 ? (
             <View style={styles.sessionList}>
               {sessions.map((session) => (
@@ -253,18 +327,18 @@ export default function SubjectScreen() {
             </View>
           ) : (
             <View style={styles.emptyState}>
-              <Text style={styles.emptyText}>아직 학습한 내용이 없습니다</Text>
-              <Text style={styles.emptySubText}>PDF를 업로드하여 학습을 시작하세요</Text>
+              <Text style={styles.emptyText}>아직 복습 기록이 없어요</Text>
+              <Text style={styles.emptySubText}>수업 필기를 찍어서 5분 안에 복습 완료!</Text>
             </View>
           )}
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>퀴즈 통계</Text>
+          <Text style={styles.sectionTitle}>내 성취도</Text>
           <View style={styles.statsGrid}>
             <View style={styles.statCard}>
               <Text style={[styles.statValue, { color: subject.color }]}>{totalQuizzes}</Text>
-              <Text style={styles.statLabel}>총 퀴즈</Text>
+              <Text style={styles.statLabel}>복습 횟수</Text>
             </View>
             <View style={styles.statCard}>
               <Text style={[styles.statValue, { color: subject.color }]}>{averageScore}점</Text>
@@ -281,31 +355,35 @@ export default function SubjectScreen() {
         </View>
 
         <View style={styles.section}>
-          <Pressable
-            onPress={() => {
-              if (sessions.length > 0) {
-                router.push(`/subject/${id}/problem?sessionId=${sessions[0].id}`);
-              }
+          <Animated.View
+            style={{
+              transform: [{ translateX: shakeAnim }]
             }}
-            disabled={sessions.length === 0}
-            style={({ pressed }) => [
-              styles.testButton,
-              sessions.length === 0
-                ? styles.testButtonDisabled
-                : { backgroundColor: subject.color },
-              pressed && sessions.length > 0 && { opacity: 0.8 },
-            ]}
           >
-            <Text style={[
-              styles.testButtonText,
-              sessions.length === 0 && { color: colors.text.disabled }
-            ]}>
-              문제 테스트
-            </Text>
-          </Pressable>
+            <Pressable
+              onPress={() => {
+                if (sessions.length > 0) {
+                  router.push(`/subject/${id}/problem?sessionId=${sessions[0].id}`);
+                } else {
+                  triggerShake();
+                }
+              }}
+              style={({ pressed }) => [
+                styles.testButton,
+                sessions.length === 0
+                  ? styles.testButtonDisabled
+                  : { backgroundColor: subject.color },
+                pressed && sessions.length > 0 && { opacity: 0.8 },
+              ]}
+            >
+              <Text style={styles.testButtonText}>
+                5분 복습 시작
+              </Text>
+            </Pressable>
+          </Animated.View>
           {sessions.length === 0 && (
             <Text style={styles.testButtonHint}>
-              PDF를 업로드하면 문제를 풀 수 있습니다
+              필기 사진을 올리면 바로 복습할 수 있어요
             </Text>
           )}
         </View>

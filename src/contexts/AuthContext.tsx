@@ -4,12 +4,11 @@
  */
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { login } from '@/src/api/auth';
 import type { UserResponse } from '@/src/api/auth';
-import { config, debugLog } from '@/src/config';
-import * as storage from '@/src/utils/storage';
 
-const USER_STORAGE_KEY = storage.StorageKeys.USER;
+const USER_STORAGE_KEY = '@user';
 
 interface AuthContextType {
   user: UserResponse | null;
@@ -30,10 +29,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const loadUser = async () => {
     try {
-      const storedUser = await storage.getItem<UserResponse>(USER_STORAGE_KEY);
+      const storedUser = await AsyncStorage.getItem(USER_STORAGE_KEY);
 
       if (storedUser) {
-        setUser(storedUser);
+        setUser(JSON.parse(storedUser));
       } else {
         // MVP: 저장된 사용자가 없으면 자동으로 로그인
         await autoLogin();
@@ -47,20 +46,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const autoLogin = async () => {
     try {
-      // 개발 환경에서만 자동 로그인 (환경 변수에서 설정)
-      if (!config.autoLoginEnabled || !config.autoLoginEmail || !config.autoLoginPassword) {
-        debugLog('Auto login disabled or credentials not configured');
-        return;
-      }
-
+      // 아까 만든 계정으로 자동 로그인
       const result = await login({
-        email: config.autoLoginEmail,
-        password: config.autoLoginPassword,
+        email: 'red@soomgsil.ac.kr',
+        password: '1234',
       });
 
-      await storage.setItem(USER_STORAGE_KEY, result);
+      await AsyncStorage.setItem(USER_STORAGE_KEY, JSON.stringify(result));
       setUser(result);
-      debugLog('Auto login successful:', result.email);
     } catch (error) {
       console.error('Auto login failed:', error);
     }
@@ -69,7 +62,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signIn = async (email: string, password: string) => {
     try {
       const result = await login({ email, password });
-      await storage.setItem(USER_STORAGE_KEY, result);
+      await AsyncStorage.setItem(USER_STORAGE_KEY, JSON.stringify(result));
       setUser(result);
     } catch (error) {
       console.error('Sign in failed:', error);
@@ -79,7 +72,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     try {
-      await storage.removeItem(USER_STORAGE_KEY);
+      await AsyncStorage.removeItem(USER_STORAGE_KEY);
       setUser(null);
     } catch (error) {
       console.error('Sign out failed:', error);

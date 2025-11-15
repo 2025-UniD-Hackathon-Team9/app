@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, Pressable, ScrollView, Animated } from 'react-native';
 import { useRouter } from 'expo-router';
 import { colors } from '@/constants/colors';
 import type { Subject } from '@/src/types';
@@ -23,6 +23,31 @@ export default function SubjectSelector({
   isLoading = false,
 }: SubjectSelectorProps) {
   const router = useRouter();
+  const shimmerAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (isLoading) {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(shimmerAnim, {
+            toValue: 1,
+            duration: 1000,
+            useNativeDriver: true,
+          }),
+          Animated.timing(shimmerAnim, {
+            toValue: 0,
+            duration: 1000,
+            useNativeDriver: true,
+          }),
+        ])
+      ).start();
+    }
+  }, [isLoading]);
+
+  const shimmerOpacity = shimmerAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.3, 1],
+  });
 
   const handleSubjectPress = (subjectId: string) => {
     router.push(`/subject/${subjectId}`);
@@ -39,12 +64,12 @@ export default function SubjectSelector({
         style={styles.scrollView}
       >
         {isLoading ? (
-          // 스켈레톤 UI
+          // 스켈레톤 UI with shimmer animation
           <>
             {[1, 2, 3].map((index) => (
               <View key={index} style={styles.skeletonCard}>
-                <View style={styles.skeletonIcon} />
-                <View style={styles.skeletonText} />
+                <Animated.View style={[styles.skeletonIcon, { opacity: shimmerOpacity }]} />
+                <Animated.View style={[styles.skeletonText, { opacity: shimmerOpacity }]} />
               </View>
             ))}
           </>
